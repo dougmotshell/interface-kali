@@ -15,7 +15,7 @@ tranquilo em recuperar via console (`Ctrl+Alt+F3`) ou live USB.
 | GRUB | tema `/boot/grub/themes/kali/theme.txt`, `GRUB_GFXMODE=1280x720,1280x800,auto`, `splash` |
 | Plymouth | tema `kali` (`/usr/share/plymouth/themes/kali`) |
 | GDM (GNOME) | `org/gnome/login-screen logo='/usr/share/images/kali-logos/logo-text-128.png'` |
-| LightDM (Xfce) | tema `Kali-Light`, ícones `Flat-Remix-Blue-Light`, fundo `kali-cubes2`, relógio `%d %b, %H:%M` |
+| LightDM (Xfce) | tema `Kali-Light`, ícones `Flat-Remix-Blue-Light`, fonte `Cantarell 11`, fundo `/usr/share/desktop-base/kali-theme/login/background`, relógio `%d %b, %H:%M`, avatar `#emblem-kali` |
 | SDDM (Plasma) | tema `breeze` |
 | Avatar do usuário | `/etc/skel/.face` e `.face.icon` |
 
@@ -60,21 +60,77 @@ identifica a tela.
 O Kali usa LightDM. Trocar o gerenciador de login afeta **todas** as sessões,
 inclusive o GNOME.
 
+São **dois passos independentes**, e confundi-los é o erro mais comum desta
+camada:
+
+1. **Trocar o gerenciador** (`apt install lightdm …`) — muda *qual programa*
+   desenha a tela de login.
+2. **Tematizar o greeter** (`greeter aplicar`) — muda *como ela se parece*.
+
+Instalar o LightDM sem o passo 2 entrega o greeter **padrão**: uma tela de login
+que não tem nada do Kali. E, a partir do passo 1, o logo aplicado ao GDM em §8.3
+fica inerte, porque o GDM deixou de ser usado.
+
 ```bash
 sudo apt install lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
 # durante a instalação, o dpkg pergunta qual gerenciador usar
-sudo cp /usr/share/kali-themes/etc/lightdm/lightdm-gtk-greeter.conf \
-        /etc/lightdm/lightdm-gtk-greeter.conf     # se instalou no modo B
 ```
 
-(O mesmo arquivo está em `docs/referencia/lightdm-gtk-greeter.conf`.)
+Depois, o passo que de fato aplica a aparência:
+
+```bash
+scripts/kali-look.sh greeter status     # o que a tela de login usa hoje
+scripts/kali-look.sh greeter aplicar    # instala a config do Kali (confirmação dupla)
+scripts/kali-look.sh greeter reverter   # restaura o backup datado
+```
+
+O script copia `docs/referencia/lightdm-gtk-greeter.conf` para
+`/etc/lightdm/lightdm-gtk-greeter.conf`, guardando a config anterior em
+`.bak-<data>`. Os valores estão em §8.1; a origem é o pacote `kali-themes`.
+
+> Em versões anteriores este guia mandava copiar de
+> `/usr/share/kali-themes/etc/lightdm/`. **Esse caminho não existe aqui:** ele
+> vem do pacote `kali-themes`, que declara `Breaks: gnome-shell (>= 51~)` e é
+> justamente o que não se instala neste Ubuntu (guia 03). A única fonte válida é
+> `docs/referencia/`.
+
+**O greeter não lê o seu `$HOME`.** Ele roda como o usuário de sistema
+`lightdm`, antes de qualquer login. Tema e ícones têm de estar em
+`/usr/share/themes` e `/usr/share/icons` — assets instalados no modo usuário
+(`assets --usuario`, que grava em `~/.themes` e `~/.local/share/icons`) são
+invisíveis para ele. Por isso esta etapa exige o **modo sistema**:
+
+```bash
+scripts/kali-look.sh assets --sistema
+```
+
+O `greeter aplicar` confere os três arquivos necessários antes de escrever em
+`/etc` e recusa seguir se faltar algum:
+
+| Arquivo | Vem de |
+|---|---|
+| `/usr/share/themes/Kali-Light` | `kali-themes-common` |
+| `/usr/share/icons/Flat-Remix-Blue-Light` | `kali-themes-common` |
+| `/usr/share/desktop-base/kali-theme/login/background` | `kali-themes-common` |
+
+**`keyboard = onboard`:** a config original do Kali aponta o teclado virtual para
+o `onboard`, que este runbook não instala. O script comenta a linha, para não
+deixar um botão morto na tela de login. Para ter o recurso:
+`sudo apt install onboard` e descomente.
+
+**Chaveiro:** trocar o GDM pelo LightDM costuma ser citado como causa de o
+`gnome-keyring` passar a pedir senha a cada boot. No Ubuntu 24.04 isso **não**
+acontece: o próprio pacote `lightdm` instala as linhas
+`pam_gnome_keyring.so` em `/etc/pam.d/lightdm` e `/etc/pam.d/lightdm-greeter`.
+Confirme com `grep -rn pam_gnome_keyring /etc/pam.d/lightdm*` — se as linhas
+estiverem lá, não há nada a fazer.
 
 Para escolher o gerenciador depois: `sudo dpkg-reconfigure gdm3`.
 Para voltar ao GDM: `sudo dpkg-reconfigure gdm3` e selecione `gdm3`; ou
 `sudo systemctl disable lightdm && sudo systemctl enable gdm3`.
 
 Se a tela de login não subir, entre em um console com `Ctrl+Alt+F3`, faça login
-em texto e rode o `dpkg-reconfigure`.
+em texto e rode `scripts/kali-look.sh greeter reverter` ou o `dpkg-reconfigure`.
 
 ## 8.5 Plymouth — a animação de boot (risco médio)
 

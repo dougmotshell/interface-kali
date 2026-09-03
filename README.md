@@ -56,6 +56,19 @@ O menu cobre todo o ciclo: baixar assets, instalar um ambiente, aplicar a
 aparência, reverter, desinstalar. Tudo aceita `--dry-run`, e ações de risco pedem
 confirmação. Antes de qualquer mudança: `./kali-look.sh backup`.
 
+**Instalar um ambiente não aplica a aparência.** São dois passos, e o segundo só
+funciona de dentro da sessão que ele configura — a aparência é gravada no serviço
+de configuração dela (`xfconf`, `kconfig`, `dconf`):
+
+```bash
+./scripts/kali-look.sh instalar xfce   # instala os pacotes
+#  logout, escolha "Xfce" na tela de login, entre, e só então:
+./scripts/kali-look.sh aplicar xfce    # aplica tema, ícones, fontes, wallpaper
+```
+
+A tela de login é uma terceira camada, independente das duas
+([guia 08](docs/guias/08-boot-login-e-logos.md) §8.4).
+
 ## Comparação visual
 
 | Imagem | O que mostra |
@@ -98,10 +111,12 @@ compartilhamento de tela, atalhos e captura de tela, não só a aparência.
 
 | Script | Função |
 |---|---|
-| `scripts/kali-look.sh` | **Ponto de entrada.** Menu e subcomandos: `status`, `backup`, `assets`, `instalar`, `aplicar`, `reverter`, `remover`, `boot`, `terminal`, `prompt` |
+| `scripts/kali-look.sh` | **Ponto de entrada.** Menu e subcomandos: `status`, `backup`, `assets`, `instalar`, `aplicar`, `reverter`, `remover`, `boot`, `greeter`, `painel`, `terminal`, `prompt` |
 | `scripts/00-backup.sh` | Salva o estado atual (dconf, configs, pacotes, temas) |
 | `scripts/10-baixar-assets.sh` | Baixa os `.deb` do Kali e instala os arquivos (por usuário ou no sistema) |
 | `scripts/20-aplicar-xfce.sh` | Tema, fontes, wallpaper, terminal e menu no Xfce |
+| `scripts/22-painel-xfce.sh` | Painel do Kali no Xfce: perfil, Whisker Menu e genmon, na ordem certa |
+| `scripts/21-greeter-lightdm.sh` | Aparência da tela de login do LightDM (exige os assets no sistema) |
 | `scripts/30-aplicar-plasma.sh` | Tema global, ícones, decoração e Konsole no Plasma |
 | `scripts/40-aplicar-gnome.sh` | Aplica tudo no GNOME atual |
 | `scripts/41-reverter-gnome.sh` | Volta o GNOME ao Yaru-purple-dark |

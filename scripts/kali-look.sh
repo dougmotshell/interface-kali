@@ -86,6 +86,14 @@ confirmar() {
 
 tem() { command -v "$1" >/dev/null 2>&1; }
 
+# `grep -q` fecha o pipe no primeiro casamento e o `fc-list` morre de SIGPIPE; com
+# `pipefail` o pipeline devolve 141 e uma fonte instalada é relatada como ausente —
+# de forma intermitente, porque depende de o fc-list ter terminado de escrever.
+# Sem o -q o grep lê até o fim: nada de SIGPIPE, resultado estável.
+fonte_presente() {
+  fc-list : family 2>/dev/null | grep -i -- "$1" >/dev/null 2>&1
+}
+
 precisa() {
   tem "$1" || morre "comando '$1' não encontrado. $2"
 }
@@ -249,8 +257,8 @@ cmd_status() {
   if w="$(wallpaper_kali)"; then ok "wallpaper disponível: $w"; else info "  wallpaper do Kali não encontrado"; fi
   [ -d "$HOME/.cache/kali-assets" ] && info "  cache de download: $HOME/.cache/kali-assets"
   printf '  fontes .......: Cantarell %s | Fira Code %s\n' \
-    "$(fc-list : family 2>/dev/null | grep -qi cantarell && echo presente || echo ausente)" \
-    "$(fc-list : family 2>/dev/null | grep -qi 'fira code' && echo presente || echo ausente)"
+    "$(fonte_presente cantarell   && echo presente || echo ausente)" \
+    "$(fonte_presente 'fira code' && echo presente || echo ausente)"
 
   titulo "Sessões instaladas (tela de login)"
   ls /usr/share/xsessions/ 2>/dev/null | sed 's/^/  /' || info "  nenhuma"
@@ -278,8 +286,29 @@ cmd_status() {
   fi
 
   titulo "Camada de boot/login"
-  printf '  logo do GDM ..: %s\n' \
-    "$([ -f /etc/dconf/db/gdm.d/95-kali-logo ] && echo 'aplicado' || echo 'padrão')"
+  local dm_ativo
+  dm_ativo="$(cat /etc/X11/default-display-manager 2>/dev/null || true)"
+  # "aplicado" sozinho engana: o logo do GDM fica inerte se o LightDM é o ativo,
+  # e foi essa leitura que fez parecer que a tela de login tinha sido tematizada.
+  local gdm_logo="padrão"
+  if [ -f /etc/dconf/db/gdm.d/95-kali-logo ]; then
+    gdm_logo="aplicado"
+    case "$dm_ativo" in
+      */gdm3|*/gdm) : ;;
+      "") gdm_logo="aplicado (gerenciador ativo desconhecido)" ;;
+      *)  gdm_logo="aplicado, porém INERTE — o ativo é $(basename "$dm_ativo")" ;;
+    esac
+  fi
+  printf '  logo do GDM ..: %s\n' "$gdm_logo"
+  local greeter="não se aplica (LightDM não instalado)"
+  if tem lightdm; then
+    if grep -q '^theme-name *= *Kali' /etc/lightdm/lightdm-gtk-greeter.conf 2>/dev/null; then
+      greeter="tema do Kali"
+    else
+      greeter="padrão — rode: $0 greeter aplicar"
+    fi
+  fi
+  printf '  greeter LightDM: %s\n' "$greeter"
   printf '  tema do GRUB .: %s\n' \
     "$([ -f /etc/default/grub.d/kali-themes.cfg ] && echo 'aplicado' || echo 'padrão')"
   printf '  plymouth .....: %s\n' \
@@ -354,9 +383,41 @@ oferta_display_manager() {
       # shellcheck disable=SC2086
       run_sudo apt-get install -y $pacotes
       aviso "para voltar ao GDM: sudo dpkg-reconfigure gdm3"
+      if [ "$qual" = "LightDM" ]; then
+        echo
+        aviso "O $qual recém-instalado usa o greeter PADRÃO — instalá-lo não deixa a"
+        aviso "tela de login parecida com a do Kali, e o logo aplicado ao GDM fica inerte."
+        aviso "Para tematizar a tela de entrada, depois:  $0 greeter aplicar"
+      fi
     fi
   else
     info "mantendo o GDM (recomendado)."
+  fi
+}
+
+# Instalar o ambiente NÃO aplica a aparência: o 'aplicar' grava no xfconf/kconfig da
+# sessão e por isso só funciona de dentro dela. Quem instala, reinicia e entra no
+# ambiente novo encontra o tema padrão dele e conclui que o runbook falhou — logo,
+# este recado precisa sobreviver às dezenas de linhas de saída do apt.
+proximo_passo_aplicar() {
+  local alvo="$1"
+  echo
+  printf '%s┌──────────────────────────────────────────────────────────────┐%s\n' "$C_AMBAR" "$C_RESET"
+  printf '%s│%s  O ambiente foi instalado, mas a APARÊNCIA ainda NÃO.        %s│%s\n' \
+    "$C_AMBAR" "$C_RESET" "$C_AMBAR" "$C_RESET"
+  printf '%s└──────────────────────────────────────────────────────────────┘%s\n' "$C_AMBAR" "$C_RESET"
+  info "Sem o passo abaixo você entra na sessão $alvo e vê o tema padrão dela"
+  info "(no Xfce: Greybird), não o do Kali."
+  echo
+  info "  1. Saia da sessão atual (logout, não é preciso reiniciar)."
+  info "  2. Na tela de login, escolha a sessão \"$alvo\"."
+  info "  3. Abra um terminal já dentro dela e rode:"
+  printf '       %s%s aplicar %s%s\n' "$C_BOLD" "$0" "$alvo" "$C_RESET"
+  echo
+  info "Motivo: a aparência é gravada no serviço de configuração da própria sessão"
+  info "(xfconf no Xfce, kconfig no Plasma). De fora, o comando é recusado."
+  if [ "$alvo" = "xfce" ] && tem lightdm; then
+    info "Depois, para a tela de login: $0 greeter aplicar"
   fi
 }
 
@@ -367,7 +428,7 @@ cmd_instalar() {
       titulo "Instalar ambiente Xfce"
       instala_lista "Xfce" "${XFCE_PKGS[@]}" || return 1
       oferta_display_manager "LightDM" "lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
-      info "Próximo passo: entre na sessão Xfce e rode: $0 aplicar xfce"
+      proximo_passo_aplicar xfce
       ;;
     plasma)
       titulo "Instalar ambiente KDE Plasma"
@@ -376,7 +437,7 @@ cmd_instalar() {
       aviso "fica Breeze com as cores KaliDark. Ver docs/guias/05-ambiente-kde-plasma.md §5.1."
       instala_lista "Plasma" "${PLASMA_PKGS[@]}" || return 1
       oferta_display_manager "SDDM" "sddm sddm-theme-breeze"
-      info "Próximo passo: entre na sessão Plasma e rode: $0 aplicar plasma"
+      proximo_passo_aplicar plasma
       ;;
     *) morre "uso: $0 instalar xfce | plasma" ;;
   esac
@@ -391,6 +452,8 @@ cmd_aplicar() {
       exige_sessao xfce || { [ "$DRY_RUN" -eq 1 ] && aviso "seguindo apenas porque é --dry-run" || return 1; }
       titulo "Aplicar aparência do Kali no Xfce"
       run bash "$BASE_DIR/20-aplicar-xfce.sh"
+      echo
+      info "Próximo passo — o painel, que é etapa separada:  $0 painel xfce"
       ;;
     plasma)
       exige_assets || return 1
@@ -453,7 +516,11 @@ remove_pacotes() {
   local -a pedidos=("$@") instalados=()
   local p
   for p in "${pedidos[@]}"; do
-    dpkg -l "$p" 2>/dev/null | grep -q "^ii  $p " && instalados+=("$p")
+    # sem `-q`, pelo mesmo motivo de `fonte_presente`: o grep que fecha o pipe cedo
+    # mata o produtor com SIGPIPE e o pipefail transforma "instalado" em "ausente".
+    if dpkg -l "$p" 2>/dev/null | grep "^ii  $p " >/dev/null 2>&1; then
+      instalados+=("$p")
+    fi
   done
   [ "${#instalados[@]}" -gt 0 ] || { info "nada de $nome está instalado"; return 0; }
   titulo "Simulação (dry-run do APT) — $nome"
@@ -577,6 +644,38 @@ cmd_boot() {
       ;;
     *) morre "uso: $0 boot aplicar | reverter" ;;
   esac
+}
+
+# ================================================================== PAINEL ====
+# Etapa separada do 'aplicar xfce' porque `xfce4-panel-profiles load` substitui
+# ~/.config/xfce4/panel/ inteiro: carregado depois, ele desfaz o que veio antes.
+cmd_painel() {
+  case "${1:-}" in
+    xfce) ;;
+    *) morre "uso: $0 painel xfce [--compacto]" ;;
+  esac
+  shift
+  exige_sessao xfce || { [ "$DRY_RUN" -eq 1 ] && aviso "seguindo apenas porque é --dry-run" || return 1; }
+  titulo "Painel do Kali no Xfce"
+  log "RUN 22-painel-xfce.sh ${*:-} (dry-run=$DRY_RUN)"
+  DRY_RUN="$DRY_RUN" bash "$BASE_DIR/22-painel-xfce.sh" "$@"
+}
+
+# ================================================================= GREETER ====
+# A tela de login do LightDM é a única camada de aparência que roda como o usuário
+# de sistema `lightdm`: ela não lê o seu $HOME. Por isso é etapa própria, exige os
+# assets no sistema e não é coberta por 'aplicar xfce'.
+cmd_greeter() {
+  local acao="${1:-}"
+  case "$acao" in
+    aplicar|reverter|status) ;;
+    *) morre "uso: $0 greeter aplicar | reverter | status" ;;
+  esac
+  # Chamado direto, sem o wrapper `run`: ao contrário dos outros scripts numerados,
+  # o 21 honra DRY_RUN por dentro e imprime cada comando privilegiado que faria.
+  log "RUN 21-greeter-lightdm.sh $acao (dry-run=$DRY_RUN)"
+  DRY_RUN="$DRY_RUN" ASSUME_YES="$ASSUME_YES" \
+    bash "$BASE_DIR/21-greeter-lightdm.sh" "$acao"
 }
 
 # ================================================================ TERMINAL ====
@@ -717,6 +816,7 @@ menu() {
     7) Aplicar no Xfce      (rodar dentro da sessão Xfce)
     8) Aplicar no Plasma    (rodar dentro da sessão Plasma)
     9) Aplicar no GNOME     (altera o desktop atual)
+    p) Painel do Kali no Xfce (perfil + Whisker Menu + genmon)
 
   Peças isoladas
    10) Terminal: paleta do Kali (gnome / xfce / plasma)
@@ -724,6 +824,8 @@ menu() {
    12) Prompt de duas linhas no zsh: remover
    13) Boot e login (GRUB, Plymouth, logo do GDM) — risco alto
    14) Reverter boot e login
+    g) Tela de login do LightDM: aplicar o tema do Kali  (risco alto)
+    G) Tela de login do LightDM: reverter ao padrão
 
   Desfazer
    15) Reverter o GNOME ao padrão do Ubuntu
@@ -762,6 +864,9 @@ MENU
       20) cmd_remover assets --usuario ;;
       21) cmd_remover assets --sistema ;;
       a|A) cmd_analisar ;;
+      p)  cmd_painel xfce ;;
+      g)  cmd_greeter aplicar ;;
+      G)  cmd_greeter reverter ;;
       d)  DRY_RUN=$((1 - DRY_RUN)); info "dry-run agora: $DRY_RUN" ;;
       q|Q|"") info "até logo"; return 0 ;;
       *)  aviso "opção inválida: $op" ;;
@@ -804,12 +909,15 @@ COMANDOS
   terminal gnome|xfce|plasma          só a paleta/fonte/transparência do terminal
   prompt aplicar|remover              bloco do prompt de duas linhas no ~/.zshrc
   boot aplicar|reverter               GRUB + Plymouth + logo do GDM (risco alto)
+  greeter aplicar|reverter|status     tela de login do LightDM (risco alto)
+  painel xfce [--compacto]            painel do Kali: perfil + Whisker + genmon
 
 EXEMPLOS
   $0 status
   $0 analisar                         # relatório no terminal + markdown em relatorios/
   $0 backup
   $0 assets --usuario
+  $0 greeter status                   # o que a tela de login está usando hoje
   $0 --dry-run aplicar gnome          # ensaio, sem mexer em nada
   $0 aplicar gnome
   $0 reverter gnome
@@ -845,6 +953,8 @@ main() {
     reverter)    shift; cmd_reverter "$@" ;;
     remover)     shift; cmd_remover "$@" ;;
     boot)        shift; cmd_boot "$@" ;;
+    greeter)     shift; cmd_greeter "$@" ;;
+    painel)      shift; cmd_painel "$@" ;;
     terminal)    shift; cmd_terminal "$@" ;;
     prompt)      shift; cmd_prompt "$@" ;;
     *)           erro "comando desconhecido: $1"; echo; usage; return 1 ;;

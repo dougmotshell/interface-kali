@@ -77,6 +77,20 @@ instalar para ler ou rodar este projeto.
   referências e valide os links.
 - Em script com `set -e`, `[ teste ] && comando` isolado e `$(… | grep …)` sem
   correspondência abortam a execução. Use `if`, ou termine com `|| true`.
+- Com `pipefail`, `produtor | grep -q padrão` devolve 141 quando o `grep` fecha o
+  pipe antes de o produtor terminar — a resposta certa é relatada como falsa, e de
+  forma intermitente. Sem o `-q` o `grep` lê até o fim. Já mentiu no `status`.
+- `instalar` **não** aplica aparência: o `aplicar` grava no `xfconf`/`kconfig` da
+  sessão e só roda de dentro dela. Quem instala, reinicia e entra no ambiente novo
+  encontra o tema padrão dele — o aviso precisa sobreviver à saída do `apt`.
+- O greeter do LightDM roda como o usuário `lightdm` e **não** lê o `$HOME`: tema e
+  ícones da tela de login exigem `assets --sistema`. Trocar o gerenciador de login
+  não tematiza nada, e o logo do GDM fica inerte assim que o LightDM assume.
+- `xfce4-panel-profiles load` substitui `~/.config/xfce4/panel/` inteiro: carregue o
+  perfil **antes** de qualquer ajuste no painel, nunca depois.
+- O Whisker Menu 2.8 (Ubuntu 24.04) guarda config no **xfconf**, e migra e apaga o
+  `whiskermenu-<id>.rc` legado. Copiar o `.rc` não tem efeito; grave as chaves no
+  xfconf, no id de plugin detectado — não crave `1`.
 
 ## Nunca
 

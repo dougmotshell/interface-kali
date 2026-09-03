@@ -18,6 +18,77 @@ Recorte dos documentos vizinhos:
 
 ## 11.1 Sessão e login
 
+### Instalei tudo, reiniciei, e a sessão nova está com o tema padrão dela
+
+**Sintoma.** O `instalar xfce` correu bem, o boot já mostra a logo do Kali, mas a
+sessão Xfce abre com **Greybird** e ícones `elementary-xfce-dark` — o tema padrão
+do Xfce, não o do Kali. No GNOME, o Yaru roxo segue no lugar.
+
+**Causa.** `instalar` e `aplicar` são passos **separados**, e o `aplicar` só
+funciona de dentro da sessão que ele configura: a aparência é gravada no serviço
+de configuração do próprio ambiente (`xfconf` no Xfce, `kconfig` no Plasma,
+`dconf` no GNOME). Rodado de fora — do GNOME, por exemplo — o comando é
+**recusado**, com esta mensagem:
+
+```
+✗ esta ação precisa rodar dentro da sessão xfce (sessão atual: ubuntu:GNOME).
+```
+
+É fácil perder esse erro entre as dezenas de linhas de saída do `apt`, reiniciar
+e concluir que o runbook falhou.
+
+**Solução.** Entre na sessão certa e rode o `aplicar` lá dentro:
+
+```bash
+# 1. logout (não precisa reiniciar) e escolha "Xfce" na tela de login
+# 2. abra um terminal JÁ na sessão Xfce:
+scripts/kali-look.sh aplicar xfce
+scripts/kali-look.sh painel xfce   # o painel é etapa separada
+```
+
+**Como confirmar sem adivinhar.** O log registra toda invocação, inclusive as
+recusadas:
+
+```bash
+grep -c 20-aplicar-xfce ~/.local/state/kali-look-backup/kali-look.log
+# 0 = o aplicar nunca rodou; qualquer número > 0 = rodou
+grep ERRO ~/.local/state/kali-look-backup/kali-look.log | tail
+```
+
+E o `status` mostra o que está em uso de fato — se a linha "tema GTK" do Xfce diz
+`Greybird`, a aparência não foi aplicada:
+
+```bash
+scripts/kali-look.sh status
+```
+
+### A tela de login não tem nada do Kali
+
+**Sintoma.** O boot mostra a logo do Kali (Plymouth e GRUB), mas a tela de login
+é a genérica — nenhum fundo do Kali, nenhum logo.
+
+**Causa.** Duas possíveis, e o `status` distingue:
+
+- Você trocou o gerenciador de login para o **LightDM** e parou aí. Instalar o
+  LightDM só troca *qual programa* desenha a tela; o greeter continua com o tema
+  padrão. Pior: a partir daí o logo aplicado ao GDM (§8.3) fica **inerte**, então
+  um `status` que diz "logo do GDM: aplicado" não significa que a tela mudou.
+- Você seguiu no **GDM**. Aí o único item disponível é o logo — o fundo do GDM
+  está compilado no `gresource` do `gnome-shell` e trocá-lo não é recomendado
+  ([`08-boot-login-e-logos.md`](08-boot-login-e-logos.md) §8.3).
+
+**Solução.** No LightDM, tematize o greeter (é um passo próprio, e exige os
+assets no **sistema**, porque o greeter não lê o seu `$HOME`):
+
+```bash
+scripts/kali-look.sh greeter status     # diagnóstico: quem está ativo, o que falta
+scripts/kali-look.sh assets --sistema   # se faltar tema/ícone/fundo em /usr/share
+scripts/kali-look.sh greeter aplicar    # confirmação dupla + backup datado
+```
+
+O efeito aparece no **próximo logout**. Se a tela de login não subir, entre em um
+console com `Ctrl+Alt+F3` e rode `scripts/kali-look.sh greeter reverter`.
+
 ### A sessão não abre e volta para a tela de login
 
 **Sintoma.** Você digita a senha, a tela pisca e volta para o GDM (o "loop de
@@ -116,6 +187,10 @@ systemctl status display-manager --no-pager | head -3
 Este material recomenda **não** trocar o gerenciador de login
 (`08-boot-login-e-logos.md` §8.4): o ganho visual é a tela de entrada, e o risco
 atinge todas as sessões.
+
+Se a troca já foi feita e você quer **ficar** no LightDM, o ganho visual só chega
+com o passo de tematização — `scripts/kali-look.sh greeter aplicar`, item "A tela
+de login não tem nada do Kali" acima.
 
 ---
 
@@ -347,11 +422,51 @@ e mais seguro do que consertar peça por peça.
 
 ## 11.6 Xfce
 
+### O menu do painel está sem o dragão e sem os favoritos do Kali
+
+**Sintoma.** O painel tem o layout do Kali, mas o botão do menu mostra o ícone
+genérico do Xfce, e os favoritos são os padrão — não os do Kali.
+
+**Causa.** Duas, e podem se somar:
+
+1. **Ordem invertida.** `xfce4-panel-profiles load` **substitui**
+   `~/.config/xfce4/panel/` inteiro. Rodado *depois* do `aplicar xfce`, ele apaga
+   os complementos que aquele passo tinha posto lá.
+2. **O `.rc` não vale mais.** O `xfce4-whiskermenu-plugin` **2.8** (Ubuntu 24.04)
+   guarda a configuração no **xfconf**; o antigo
+   `~/.config/xfce4/panel/whiskermenu-<id>.rc` é migrado e **apagado** na
+   primeira execução do plugin. Copiar o arquivo não tem efeito nenhum — e
+   reiniciar o painel logo depois de copiá-lo o remove.
+
+**Solução.** Rode a etapa de painel, que faz as duas coisas na ordem certa
+(carrega o perfil primeiro, depois grava as chaves no xfconf do plugin certo):
+
+```bash
+scripts/kali-look.sh painel xfce
+```
+
+**Conferir sem adivinhar** — o que vale é o xfconf, não o arquivo:
+
+```bash
+# descobre o id do plugin e lê a config em uso
+for i in $(seq 1 30); do
+  [ "$(xfconf-query -c xfce4-panel -p /plugins/plugin-$i 2>/dev/null)" = whiskermenu ] \
+    && N=$i && break
+done
+xfconf-query -c xfce4-panel -p /plugins/plugin-$N/button-icon   # esperado: kali-panel-menu
+xfconf-query -c xfce4-panel -p /plugins/plugin-$N/menu-width    # esperado: 570
+```
+
+Se `button-icon` já é `kali-panel-menu` e o ícone continua genérico, o problema é
+o tema de ícones: o `kali-panel-menu.svg` vem de `kali-themes-common`, em
+`Flat-Remix-Blue-Dark/apps/scalable/` (§11.3).
+
+
 | Sintoma | Causa | Solução |
 |---|---|---|
 | `xfce4-panel-profiles load` não existe | pacote ausente | `sudo apt install xfce4-panel-profiles` |
 | O painel carregou, mas o plugin de VPN mostra erro | o `genmon` aponta para `/usr/share/kali-themes/xfce4-panel-genmon-vpnip.sh`, que só existe no modo sistema | clique direito no plugin → Propriedades → aponte para `~/.local/share/kali-themes/xfce4-panel-genmon-vpnip.sh` |
-| O Whisker Menu ficou com o tamanho/ícone padrão | `whiskermenu-1.rc` só vale se o plugin tiver **id 1** | descubra o id em `ls ~/.config/xfce4/panel/whiskermenu-*.rc` e renomeie a cópia para o id certo |
+| O Whisker Menu ficou com o tamanho/ícone padrão | no plugin 2.8 a config está no **xfconf**, não no `.rc` — ver o item dedicado no início desta seção | `scripts/kali-look.sh painel xfce` |
 | Mudanças no `xfconf` não pegam | as configurações são lidas na entrada da sessão | logout/login na sessão Xfce, ou `xfce4-panel -r` para só o painel |
 | O wallpaper não muda | a propriedade varia por monitor/workspace | `xfconf-query -c xfce4-desktop -l \| grep -E 'last-image$\|image-path$'` e defina cada uma |
 | Não há sessão "Xfce" no GDM | o `xfce4` não terminou de instalar | `ls /usr/share/xsessions` — hoje esta máquina só tem `ubuntu.desktop` e `ubuntu-xorg.desktop` |
@@ -453,7 +568,7 @@ tema. O mapa completo, item por item, está em
 |---|---|---|
 | Compartilhamento de tela no Slack/Teams/Meet abre a lista vazia ou não mostra janelas | dono da captura mudou; no Xorg o app captura direto, mas o app pode ter cacheado a escolha do portal | feche e reabra o app na sessão nova; escolha "Tela inteira" uma vez. Se persistir, confirme que `xdg-desktop-portal-gtk` está rodando: `systemctl --user status xdg-desktop-portal-gtk` |
 | O diálogo de senha nunca aparece e a ação simplesmente não acontece (discos, GParted, atualização) | não há agente gráfico do polkit na sessão Xfce | `sudo apt install mate-polkit` e faça logout/login. Verifique se está no ar: `pgrep -af polkit-mate-authentication-agent` |
-| O chaveiro pede senha a cada boot (Chrome, Brave, Slack, Bitwarden esquecem senhas) | o destravamento por PAM não está no gerenciador de login em uso — acontece se você trocou o GDM pelo LightDM | `grep -r pam_gnome_keyring /etc/pam.d/lightdm*`; se não houver linha, mantenha o GDM (guia 08 §8.4) ou adicione as linhas `auth optional pam_gnome_keyring.so` / `session optional pam_gnome_keyring.so auto_start` |
+| O chaveiro pede senha a cada boot (Chrome, Brave, Slack, Bitwarden esquecem senhas) | o destravamento por PAM não está no gerenciador de login em uso. No Ubuntu 24.04 o pacote `lightdm` **já** instala as linhas, então trocar o GDM pelo LightDM por si só não causa isso — verifique antes de culpar a troca | `grep -rn pam_gnome_keyring /etc/pam.d/lightdm*` (o esperado são 4 linhas, em `lightdm` e `lightdm-greeter`); se faltarem, adicione `-auth optional pam_gnome_keyring.so` e `-session optional pam_gnome_keyring.so auto_start`, ou volte ao GDM (guia 08 §8.4) |
 | Atalhos de teclado que eu usava sumiram | atalhos do GNOME não migram para o Xfce | *Configurações do Xfce → Teclado → Atalhos de aplicativo*. O Kali traz o seu conjunto em `xfce4-keyboard-shortcuts.xml`; confira os seus antes de trocar de sessão (guia 13 §13.4) |
 | Gestos de touchpad de 3/4 dedos pararam | o Mutter tem gestos nativos, o Xorg não | `touchegg` ou `libinput-gestures` — confirme com `apt-cache policy touchegg libinput-gestures` |
 | A luz noturna (tela mais quente à noite) desapareceu | é um recurso do GNOME; o Xfce não tem | `redshift-gtk`, `gammastep` ou `xsct` |

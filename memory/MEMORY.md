@@ -9,6 +9,7 @@ Irmãos: `AGENTS.md` (contrato) · `docs/guias/` (a documentação real).
 ## Entradas
 
 - [Pacotes de aparência do Kali](pacotes-do-kali.md) — pool, versões extraídas e os `Breaks` que decidem o que é instalável neste Ubuntu.
+- [Tela de login e as etapas](tela-de-login-e-etapas.md) — por que `instalar` não aplica, por que o greeter não lê o `$HOME`, e o `grep -q` que mente sob `pipefail`.
 
 ## Regras
 

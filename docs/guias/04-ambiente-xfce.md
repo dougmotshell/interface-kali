@@ -130,14 +130,13 @@ sudo cp docs/referencia/painel/xfce4-panel-default.xml \
 
 Isso só tem efeito em usuários que ainda não têm `~/.config/xfce4/panel`.
 
+> **Ordem importa.** `xfce4-panel-profiles load` **substitui**
+> `~/.config/xfce4/panel/` inteiro. Carregado *depois* dos complementos abaixo, ele
+> apaga tudo o que você pôs lá. Carregue o perfil **primeiro**.
+
 Complementos do painel:
 
 ```bash
-# ícone do menu + dimensões do Whisker Menu
-mkdir -p ~/.config/xfce4/panel
-cp docs/referencia/painel/whiskermenu-defaults.rc \
-   ~/.config/xfce4/panel/whiskermenu-1.rc
-
 # script do plugin genmon que mostra o IP da VPN no painel
 mkdir -p ~/.local/share/kali-themes
 cp docs/referencia/painel/xfce4-panel-genmon-vpnip.sh \
@@ -145,10 +144,44 @@ cp docs/referencia/painel/xfce4-panel-genmon-vpnip.sh \
 chmod +x ~/.local/share/kali-themes/xfce4-panel-genmon-vpnip.sh
 ```
 
-O `whiskermenu-1.rc` só vale se o plugin do Whisker tiver o id 1 (é o caso no
-layout do Kali). Nos favoritos, troque as entradas de ferramentas
-(`kali-tools.desktop`, `exploit-database.desktop`…) pelas suas: terminal,
-arquivos, editor, navegador.
+### O Whisker Menu não usa mais arquivo `.rc`
+
+O `xfce4-whiskermenu-plugin` **2.8** do Ubuntu 24.04 guarda a configuração no
+**xfconf**. O antigo `~/.config/xfce4/panel/whiskermenu-<id>.rc` é migrado e
+**apagado** na primeira execução do plugin — copiá-lo não tem efeito nenhum. Os
+valores de `docs/referencia/painel/whiskermenu-defaults.rc` vão para o xfconf,
+no id do plugin (que só existe depois de o perfil ter sido carregado):
+
+```bash
+# descobre o id do plugin whiskermenu no painel em uso
+for i in $(seq 1 30); do
+  [ "$(xfconf-query -c xfce4-panel -p /plugins/plugin-$i 2>/dev/null)" = whiskermenu ] \
+    && N=$i && break
+done
+
+P=/plugins/plugin-$N
+xfconf-query -c xfce4-panel -p $P/item-icon-size     -n -t int    -s 2
+xfconf-query -c xfce4-panel -p $P/category-icon-size -n -t int    -s 1
+xfconf-query -c xfce4-panel -p $P/command-settings   -n -t string -s xfce4-settings-manager
+# … demais chaves do whiskermenu-defaults.rc
+```
+
+O perfil `Kali.tar.bz2` já traz `button-icon=kali-panel-menu` (o dragão),
+`menu-width`, `menu-height`, `favorites` e as chaves `position-*` — as demais
+ficam a cargo do passo acima. Em versões do plugin **anteriores** à 2.8 o `.rc`
+ainda vale, e o script mantém a cópia como fallback.
+
+Nos favoritos, troque as entradas de ferramentas (`kali-tools.desktop`,
+`exploit-database.desktop`…) pelas suas: terminal, arquivos, editor, navegador.
+
+Tudo isso, na ordem certa, está em `scripts/22-painel-xfce.sh`:
+
+```bash
+scripts/kali-look.sh painel xfce               # painel de 34 px
+scripts/kali-look.sh painel xfce --compacto    # painel de 28 px
+```
+
+Ele copia `~/.config/xfce4/panel` para `.bak-<data>` antes de carregar o perfil.
 
 Se você carregou o perfil pronto, o genmon já vem apontando para
 `/usr/share/kali-themes/xfce4-panel-genmon-vpnip.sh`. Com o modo A, edite o
@@ -180,10 +213,20 @@ O Kali usa LightDM em vez do GDM. Trocar de gerenciador de login **não é
 necessário** e mexe em uma peça crítica do sistema; se você quiser mesmo a tela
 de login do Kali, veja `08-boot-login-e-logos.md` §8.4 — e leia os avisos.
 
+Se for por esse caminho, note que são **dois** passos: instalar o LightDM troca
+qual programa desenha a tela de login, e `scripts/kali-look.sh greeter aplicar`
+troca a aparência dela. Só o primeiro deixa a tela com o greeter padrão.
+
 ## 4.7 Atalho: script
 
 Os passos 4.3 a 4.5 estão automatizados em `scripts/20-aplicar-xfce.sh` — rode-o
-**dentro da sessão Xfce**, depois carregue o painel com o `xfce4-panel-profiles`.
+**dentro da sessão Xfce**. O painel é um segundo comando, porque carregar o perfil
+substitui `~/.config/xfce4/panel/` e tem de vir antes dos ajustes:
+
+```bash
+scripts/kali-look.sh aplicar xfce      # tema, ícones, fontes, wallpaper, terminal
+scripts/kali-look.sh painel xfce       # perfil do painel + Whisker Menu + genmon
+```
 
 ## 4.8 Verificação
 

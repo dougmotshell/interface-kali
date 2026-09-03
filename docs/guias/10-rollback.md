@@ -171,10 +171,18 @@ sudo update-initramfs -u
 sudo rm -f /etc/dconf/db/gdm.d/95-kali-logo
 sudo dconf update
 
+# tema do greeter do LightDM (mantém o LightDM, só desfaz a aparência)
+scripts/kali-look.sh greeter reverter                   # restaura o .bak-<data>
+
 # LightDM -> GDM (encerra a sessão gráfica)
 sudo dpkg-reconfigure gdm3
 cat /etc/X11/default-display-manager                    # confirme /usr/sbin/gdm3
 ```
+
+São dois níveis distintos: `greeter reverter` devolve a tela de login ao tema
+padrão **sem** mexer em qual gerenciador está ativo; o `dpkg-reconfigure gdm3`
+troca o gerenciador e encerra a sessão gráfica. Faça o primeiro se só a aparência
+incomoda.
 
 O backup de `scripts/00-backup.sh` guarda os originais em `sistema/` — use-os se
 tiver editado `/etc/default/grub` ou `/etc/lightdm` à mão:

@@ -49,16 +49,12 @@ echo "== terminal =="
 mkdir -p "$HOME/.config/xfce4/terminal"
 cp "$REF/shell/xfce4-terminalrc" "$HOME/.config/xfce4/terminal/terminalrc"
 
-echo "== Whisker Menu =="
-mkdir -p "$HOME/.config/xfce4/panel"
-cp "$REF/painel/whiskermenu-defaults.rc" "$HOME/.config/xfce4/panel/whiskermenu-1.rc"
-
-echo "== script do IP de VPN (plugin genmon) =="
-mkdir -p "$HOME/.local/share/kali-themes"
-cp "$REF/painel/xfce4-panel-genmon-vpnip.sh" "$HOME/.local/share/kali-themes/"
-chmod +x "$HOME/.local/share/kali-themes/xfce4-panel-genmon-vpnip.sh"
-
 echo
-echo "Falta o painel. Com o xfce4-panel-profiles instalado:"
-echo "  xfce4-panel-profiles load \"$REF/painel/Kali.tar.bz2\""
-echo "(ou 'Kali compact.tar.bz2' para o painel de 28 px)"
+echo "Falta o painel — e ele é etapa separada de propósito:"
+echo "  bash \"$SCRIPT_DIR/22-painel-xfce.sh\"            # painel de 34 px"
+echo "  bash \"$SCRIPT_DIR/22-painel-xfce.sh\" --compacto  # painel de 28 px"
+echo
+echo "Não carregue o perfil com 'xfce4-panel-profiles load' à mão: ele substitui"
+echo "~/.config/xfce4/panel/ inteiro e desfaz ajustes feitos antes. O 22 carrega o"
+echo "perfil primeiro e só então configura o Whisker Menu e o genmon, na ordem que"
+echo "funciona."

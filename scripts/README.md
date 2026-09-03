@@ -26,7 +26,9 @@ exceções são deliberadas: backup e log ficam em
 | `kali-look.sh` | Gerenciador: menu + CLI para instalar, aplicar, reverter e remover tudo | só nas ações de sistema, sempre anunciado | ele mesmo (`reverter`, `remover`, `boot reverter`) |
 | `00-backup.sh` | Salva `dconf` completo, configs (`xfce4`, `kdeglobals`, `.zshrc`…), lista de pacotes e tema de Plymouth em `~/.local/state/kali-look-backup/<data>/` | não | — (é o próprio ponto de retorno) |
 | `10-baixar-assets.sh` | Baixa os `.deb` oficiais do Kali, confere checksums, extrai e instala os arquivos por usuário (`--instalar-usuario`) ou no sistema (`--instalar-sistema`). Versões e espelho ajustáveis por variável de ambiente — veja `--help` | só com `--instalar-sistema` | `kali-look.sh remover assets` |
-| `20-aplicar-xfce.sh` | Tema `Kali-Dark`, ícones, fontes, xfwm4, wallpaper, `terminalrc`, Whisker Menu e script do genmon — via `xfconf-query` | não | `kali-look.sh reverter xfce` |
+| `20-aplicar-xfce.sh` | Tema `Kali-Dark`, ícones, fontes, xfwm4, wallpaper e `terminalrc` — via `xfconf-query`. O painel é o `22`, etapa separada | não | `kali-look.sh reverter xfce` |
+| `21-greeter-lightdm.sh` | Tela de login: instala a config do Kali em `/etc/lightdm/lightdm-gtk-greeter.conf` (tema `Kali-Light`, ícones, fundo, relógio). Valida os assets em `/usr/share` antes de escrever — o greeter roda como o usuário `lightdm` e **não** lê o seu `$HOME`. `aplicar`/`reverter`/`status` | sim, sempre anunciado | `kali-look.sh greeter reverter` (restaura o `.bak-<data>`) |
+| `22-painel-xfce.sh` | Painel do Kali: copia `~/.config/xfce4/panel` para `.bak-<data>`, carrega o perfil `Kali.tar.bz2` (ou `--compacto`), grava as chaves do Whisker Menu no **xfconf** do plugin detectado e instala o script do genmon. Nessa ordem, porque `panel-profiles load` substitui o diretório do painel | não | `mv ~/.config/xfce4/panel.bak-<data> ~/.config/xfce4/panel` |
 | `30-aplicar-plasma.sh` | Tema global `org.kali.kalidark.desktop`, esquema `KaliDark`, ícones, decoração Breeze com a ordem de botões do Kali, Konsole e tela de bloqueio | não | `kali-look.sh reverter plasma` |
 | `40-aplicar-gnome.sh` | `adw-gtk3-dark` + tema de shell `Kali-Dark`, ícones, fontes, wallpaper, dash-to-dock, `ding`, extensões, terminal e monitor do sistema | não | `41-reverter-gnome.sh` |
 | `41-reverter-gnome.sh` | Reverte o GNOME: restaura os valores do backup de `00-backup.sh` quando existe e, sem backup, aplica `gsettings reset` (padrão do schema, sem cravar tema de nenhuma distribuição) | não | — |
@@ -49,9 +51,11 @@ do fluxo de aparência: nenhum script acima depende deles.
 
 # 3a. caminho recomendado: sessão Xfce paralela
 ./kali-look.sh instalar xfce
-#    faça logout, escolha "Xfce Session" no GDM, entre e então:
+#    ATENÇÃO: instalar NÃO aplica a aparência. O passo abaixo só funciona de
+#    dentro da sessão Xfce — faça logout, escolha "Xfce Session" na tela de
+#    login, entre, abra um terminal ali e então:
 ./kali-look.sh aplicar xfce
-xfce4-panel-profiles load ../docs/referencia/painel/Kali.tar.bz2
+./kali-look.sh painel xfce     # perfil do painel + Whisker Menu + genmon
 
 # 3b. ou: vestir o GNOME atual de Kali (15 min, reversível em um comando)
 ./kali-look.sh --dry-run aplicar gnome     # ensaio primeiro
@@ -65,9 +69,15 @@ xfce4-panel-profiles load ../docs/referencia/painel/Kali.tar.bz2
 # 4. peças opcionais
 ./kali-look.sh prompt aplicar               # prompt ┌──(user㉿host)-[~]
 ./kali-look.sh terminal gnome               # só a paleta do terminal
-./kali-look.sh assets --sistema             # necessário para o passo seguinte
+./kali-look.sh assets --sistema             # necessário para os dois passos seguintes
 ./kali-look.sh boot aplicar                 # GRUB + Plymouth + logo do GDM (risco alto)
+./kali-look.sh greeter aplicar              # tela de login do LightDM (risco alto)
 ```
+
+O `greeter` é etapa separada do `boot` porque só faz sentido quando o LightDM é o
+gerenciador de login ativo — o Kali usa LightDM, o Ubuntu vem com GDM. Instalar o
+LightDM troca *qual programa* desenha a tela; o `greeter aplicar` troca *como ela
+se parece*. Sem o segundo passo, a tela de login fica com o greeter padrão.
 
 ## Desfazendo
 
@@ -76,6 +86,7 @@ xfce4-panel-profiles load ../docs/referencia/painel/Kali.tar.bz2
 ./kali-look.sh reverter xfce          # ~/.config/xfce4 vira .bak-<data>
 ./kali-look.sh reverter plasma        # kdeglobals/kwinrc/... viram .bak-<data>
 ./kali-look.sh boot reverter          # remove tema de GRUB/Plymouth e logo do GDM
+./kali-look.sh greeter reverter       # tela de login volta ao greeter padrão
 ./kali-look.sh prompt remover         # remove o bloco delimitado do ~/.zshrc
 ./kali-look.sh remover xfce           # desinstala os pacotes do Xfce
 ./kali-look.sh remover plasma         # desinstala os pacotes do Plasma
@@ -108,6 +119,13 @@ mas não expande os comandos que estão **dentro** deles (o script avisa isso na
 tela). Para ver linha por linha, leia o script correspondente ou o guia do
 ambiente.
 
+A exceção é o `21-greeter-lightdm.sh`: por escrever em `/etc`, ele honra
+`DRY_RUN` por dentro e imprime cada comando privilegiado que executaria.
+
+```bash
+./kali-look.sh --dry-run greeter aplicar    # mostra o cp, o install e o sed
+```
+
 ## Proteções embutidas
 
 - **Sessão certa.** `aplicar xfce` recusa rodar fora da sessão Xfce (o mesmo para
@@ -120,6 +138,16 @@ ambiente.
   afeta *todas* as sessões, e pede confirmação dupla.
 - **Boot.** `boot aplicar` exige confirmação dupla, checa os assets de sistema e
   guarda `grub.cfg.bak-<data>` antes de rodar `update-grub`.
+- **Tela de login.** `greeter aplicar` exige confirmação dupla, valida os três
+  arquivos que o greeter precisa em `/usr/share` **antes** de escrever em `/etc`,
+  guarda a config anterior em `.bak-<data>` e recusa rodar quando não há terminal
+  para o `sudo` pedir senha — em vez de falhar no meio e deixar `/etc` pela metade.
+- **Ordem do painel.** `painel xfce` carrega o perfil **antes** de configurar o
+  Whisker Menu e o genmon, porque `xfce4-panel-profiles load` substitui
+  `~/.config/xfce4/panel/` inteiro e desfaria ajustes feitos antes.
+- **Passo seguinte visível.** `instalar xfce|plasma` termina com um bloco
+  destacado dizendo que a aparência ainda **não** foi aplicada e qual comando
+  falta, porque esse recado precisa sobreviver às dezenas de linhas do `apt`.
 - **Log.** Toda invocação, confirmação e comando fica em
   `~/.local/state/kali-look-backup/kali-look.log`.
 
@@ -139,6 +167,7 @@ Pré-requisitos:
 | Aplicar no Xfce | `xfconf-query` (vem com o Xfce), `xfce4-panel-profiles` para o painel |
 | Aplicar no Plasma | `kwriteconfig5` ou `kwriteconfig6` e os `plasma-apply-*` |
 | Camada de boot | `sudo`, `update-grub`, `plymouth-label`, e os assets instalados no sistema |
+| Tela de login do Kali | `lightdm` + `lightdm-gtk-greeter` como gerenciador ativo, e os assets no **sistema** (o greeter não lê o `$HOME`) |
 | Regerar os mockups | `google-chrome` (ou Brave/Edge) — só para `docs/capturas/`, nada do fluxo depende disso |
 
 Em distribuição não-Debian (Fedora, Arch, openSUSE) os temas e os arquivos de

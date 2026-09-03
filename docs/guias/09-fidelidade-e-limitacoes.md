@@ -26,7 +26,7 @@ Legenda: ✅ idêntico · 🟡 próximo, com diferenças visíveis · 🔴 não 
 | Prompt de duas linhas | ✅ | ✅ | ✅ |
 | Editores com esquema Kali-Dark | ✅ Mousepad | ✅ Kate/Konsole | ✅ GNOME Text Editor |
 | Tela de bloqueio | ✅ | ✅ | 🟡 fundo aplicável, layout do GNOME |
-| Tela de login | 🟡 LightDM idêntico, se você trocar o DM | 🟡 GDM com logo do Kali | 🟡 GDM com logo do Kali |
+| Tela de login | 🟡 LightDM idêntico, se você trocar o DM **e** rodar `greeter aplicar` | 🟡 GDM com logo do Kali | 🟡 GDM com logo do Kali |
 | Plymouth (boot) | ✅ | ✅ | ✅ |
 | GRUB | ✅ | ✅ | ✅ |
 | Apps GTK4/libadwaita | 🟡 escuros, mas em cinza Adwaita | 🟡 idem | 🟡 idem |
