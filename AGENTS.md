@@ -100,3 +100,16 @@ aqui.
 
 `memory/MEMORY.md` é o índice (uma linha por entrada, até 200 linhas); o detalhe vai
 nos arquivos por tópico.
+
+
+## Recomendações
+
+seja inteligente pensando em estratégias para economizar tokens sem perder a qualidade e sem encher desnecessariamente o contexto.
+
+Sempre aprenda, anote o que aprendeu para não ter retrabalho no futuro, note os erros para evitar que se repita.
+
+Sempre que necessário, crie scripts e/ou skills e/ou agents etc... tudo para facilitar e otimizar os trabalhos.
+
+sempre documente tudo.
+
+use subagents sempre que possível para dividir tarefas complexas e otimizar o uso de tokens.

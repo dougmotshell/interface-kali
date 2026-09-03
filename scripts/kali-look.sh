@@ -307,9 +307,13 @@ cmd_backup() {
 # ================================================================== ASSETS ====
 cmd_assets() {
   local modo="${1:-}"
+  local instalar_modo
   case "$modo" in
-    --usuario) ;;
+    --usuario)
+      instalar_modo="--instalar-usuario"
+      ;;
     --sistema)
+      instalar_modo="--instalar-sistema"
       aviso "o modo --sistema roda 'dpkg -i' nos pacotes de dados do Kali"
       aviso "(kali-themes-common, kali-wallpapers-2026) e pede sudo."
       confirmar "seguir com a instalação no sistema?" || return 1
@@ -317,7 +321,7 @@ cmd_assets() {
     *) morre "uso: $0 assets --usuario | --sistema" ;;
   esac
   titulo "Assets do Kali ($modo)"
-  run bash "$BASE_DIR/10-baixar-assets.sh" "$modo"
+  run bash "$BASE_DIR/10-baixar-assets.sh" "$instalar_modo"
 }
 
 # =============================================================== INSTALAR =====
