@@ -31,6 +31,12 @@ Fora da lista de propósito: `kwin-style-kali` (decoração de janela do Plasma)
 um plugin compilado para Plasma 6 e não funciona no Plasma 5.27 do Ubuntu — veja
 `05-ambiente-kde-plasma.md` §5.1.
 
+O `kali-themes` tem ainda um impedimento técnico duro, revelado pelo próprio
+pacote: ele declara `Breaks: gnome-shell (>= 51~), gnome-shell (<< 48~)`, isto é,
+só aceita GNOME Shell 48 a 50. Esta máquina tem o **46** — o `dpkg` recusaria a
+instalação, e é por isso que o tema de shell `Kali-Dark` é assumidamente feito
+para um GNOME mais novo (veja o guia 06 §6.3).
+
 Os três primeiros são pacotes de dados: mexem só em `/usr/share`, sem scripts de
 pós-instalação que reconfigurem o sistema. O quarto **não deve ser instalado** —
 ele aplicaria os padrões do Kali para todos os usuários e exigiria
