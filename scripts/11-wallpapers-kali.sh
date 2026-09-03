@@ -61,6 +61,15 @@ run()   {
   "$@"
 }
 
+# `cp -n` avisa que o comportamento é não-portável e pode mudar; o coreutils 9.3+
+# tem `--update=none`, que faz o mesmo sem o aviso. Testado uma vez, não a cada
+# arquivo, e com queda para `-n` no coreutils antigo.
+if cp --help 2>/dev/null | grep -e '--update' >/dev/null 2>&1; then
+  CP_SEM_SOBRESCREVER="--update=none"
+else
+  CP_SEM_SOBRESCREVER="-n"
+fi
+
 # Metapacote e pacote de transição: aparecem no pool, não trazem imagem.
 SEM_IMAGEM="kali-wallpapers-all kali-legacy-wallpapers"
 
@@ -243,14 +252,14 @@ cmd_instalar() {
       local sub
       for sub in "$origem"/*; do
         [ -d "$sub" ] || continue
-        run cp -an "$sub"/. "$DEST_IMG/" 2>/dev/null || true
+        run cp -a $CP_SEM_SOBRESCREVER "$sub"/. "$DEST_IMG/" 2>/dev/null || true
       done
       n=$((n + 1))
     else
       aviso "$(rotulo "$pacote") não traz /usr/share/backgrounds — nada a copiar"
     fi
     if [ -d "$STAGE/$pacote/usr/share/wallpapers" ]; then
-      run cp -an "$STAGE/$pacote/usr/share/wallpapers"/. "$DEST_KDE/" 2>/dev/null || true
+      run cp -a $CP_SEM_SOBRESCREVER "$STAGE/$pacote/usr/share/wallpapers"/. "$DEST_KDE/" 2>/dev/null || true
     fi
   done <<< "$pares"
   ok "$n conjunto(s) copiado(s) para $DEST_IMG"
