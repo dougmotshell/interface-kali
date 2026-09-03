@@ -91,6 +91,14 @@ instalar para ler ou rodar este projeto.
 - O Whisker Menu 2.8 (Ubuntu 24.04) guarda config no **xfconf**, e migra e apaga o
   `whiskermenu-<id>.rc` legado. Copiar o `.rc` não tem efeito; grave as chaves no
   xfconf, no id de plugin detectado — não crave `1`.
+- A paleta do terminal configura o **xfce4-terminal e mais nenhum**. Antes de culpar
+  a paleta, resolva qual terminal abre: `~/.config/xfce4/helpers.rc` decide o dos
+  atalhos, e a alternativa `x-terminal-emulator` (global, com `sudo`) o do "Root
+  Terminal". Num Ubuntu usado, esses valores costumam apontar para tilix ou similar.
+- Framework de prompt (oh-my-zsh com `ZSH_THEME`, Powerlevel10k, Starship) redefine
+  o `PROMPT` em cada `precmd` — depois do `.zshrc`. O bloco do Kali fica no arquivo,
+  `print $PROMPT` devolve o certo, e a tela mostra o outro: quem desenha por último
+  ganha. Detecte o concorrente; não afirme "aplicado" sem isso.
 
 ## Nunca
 
