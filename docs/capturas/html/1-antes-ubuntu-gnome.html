@@ -1,0 +1,71 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+  .badge{left:auto!important;right:0;border-top-right-radius:0;border-top-left-radius:8px}
+  .wall { background-image: url('../assets/wallpaper-atual.jpg'); }
+  /* GNOME 46 / Yaru-purple-dark */
+  .topbar { position:absolute; top:0; left:0; right:0; height:32px; background:#141414;
+            color:#f6f5f4; display:flex; align-items:center; padding:0 14px; font-size:14px; }
+  .topbar .mid { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+  .topbar .right { margin-left:auto; display:flex; gap:10px; align-items:center; }
+  .dock { position:absolute; left:50%; transform:translateX(-50%); bottom:6px; height:64px;
+          background:rgba(35,35,35,.86); border-radius:16px; display:flex; align-items:center;
+          gap:8px; padding:0 10px; border:1px solid rgba(255,255,255,.08); }
+  .dock .app { width:48px; height:48px; border-radius:10px; display:flex; align-items:center;
+               justify-content:center; font-size:22px; }
+  .dot { width:5px; height:5px; border-radius:50%; background:#7764d8; position:absolute; bottom:3px; }
+  .win.files { left:250px; top:120px; width:900px; height:560px; background:#353535; color:#f6f5f4; }
+  .hdr { height:46px; background:#303030; display:flex; align-items:center; padding:0 12px;
+         border-bottom:1px solid #1b1b1b; font-weight:700; font-size:14px; }
+  .hdr .btns { margin-left:auto; display:flex; gap:8px; }
+  .hdr .btns i { width:24px; height:24px; border-radius:50%; background:#4a4a4a; display:block; }
+  .body { display:flex; height:calc(100% - 46px); }
+  .side { width:220px; background:#2c2c2c; padding:12px 8px; font-size:14px; }
+  .side div { padding:7px 10px; border-radius:7px; color:#d6d3d1; }
+  .side div.sel { background:#7764d8; color:#fff; }
+  .grid { flex:1; padding:16px; display:grid; grid-template-columns:repeat(5,1fr);
+          gap:14px; align-content:start; }
+  .it { text-align:center; font-size:13px; color:#e6e4e1; }
+  .it .ic { width:52px; height:52px; margin:0 auto 6px; display:block;
+            object-fit:contain; }
+</style></head><body>
+<div class="wall"></div>
+<div class="topbar">
+  <span>Atividades</span>
+  <div class="mid"><b>3 de set  09:41</b></div>
+  <div class="right"><span>⌨</span><span>🔊</span><span>📶</span><span>🔋</span><span>⏻</span></div>
+</div>
+<div class="win files">
+  <div class="hdr">Início <div class="btns"><i></i><i></i><i></i></div></div>
+  <div class="body">
+    <div class="side">
+      <div class="sel"><img src="../assets/yaru/user-home.png" style="width:18px;vertical-align:-4px;margin-right:6px">Início</div><div>🖥 Área de trabalho</div><div>⬇ Downloads</div>
+      <div>📄 Documentos</div><div>🖼 Imagens</div><div>🎵 Música</div><div>🗑 Lixeira</div>
+    </div>
+    <div class="grid">
+      <div class="it"><img class="ic" src="../assets/yaru/folder.png">Desktop</div>
+      <div class="it"><img class="ic" src="../assets/yaru/folder-documents.png">Documents</div>
+      <div class="it"><img class="ic" src="../assets/yaru/folder-download.png">Downloads</div>
+      <div class="it"><img class="ic" src="../assets/yaru/folder.png">projetos</div>
+      <div class="it"><img class="ic" src="../assets/yaru/folder.png">www</div>
+      <div class="it"><img class="ic" src="../assets/yaru/folder-pictures.png">Pictures</div>
+      <div class="it"><img class="ic" src="../assets/yaru/folder-videos.png">Videos</div>
+      <div class="it"><img class="ic" src="../assets/yaru/folder-music.png">Music</div>
+    </div>
+  </div>
+</div>
+<div class="dock">
+  <div class="app" style="background:#5a4fbf">📁<div class="dot"></div></div>
+  <div class="app" style="background:#e2554b">🦁</div>
+  <div class="app" style="background:#4a154b">💬<div class="dot"></div></div>
+  <div class="app" style="background:#302e31">🎥</div>
+  <div class="app" style="background:#0a5aa8">🅥<div class="dot"></div></div>
+  <div class="app" style="background:#f0562d">Ⓘ</div>
+  <div class="app" style="background:#f26b3a">📮</div>
+  <div class="app" style="background:#372a5c">🗄</div>
+  <div class="app" style="background:#1b1b1b">▮</div>
+  <div class="app" style="background:#d1462f">🛡</div>
+  <div class="app" style="background:#175ddc">🔐</div>
+  <div class="app" style="background:#c96442">✳</div>
+</div>
+<div class="badge">ANTES — Ubuntu 24.04 · GNOME 46 · Yaru-purple-dark (simulação a partir das configurações reais desta máquina)</div>
+</body></html>

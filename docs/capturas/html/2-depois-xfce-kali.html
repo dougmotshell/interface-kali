@@ -1,0 +1,122 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+  .wall { background-image: url('../assets/kali-cubes.jpg'); }
+  /* Painel Xfce do Kali: topo, 34px, #0d0e11 */
+  .panel { position:absolute; top:0; left:0; right:0; height:34px; background:#0d0e11;
+           color:#eeeeec; display:flex; align-items:center; gap:6px; padding:0 6px;
+           font-size:14px; border-bottom:1px solid #000; }
+  .panel img { width:22px; height:22px; }
+  .sep { width:1px; height:20px; background:#2b2f3a; }
+  .grow { flex:1; }
+  .plug { display:flex; align-items:center; gap:6px; padding:0 4px; height:26px; }
+  .task { width:28px; height:26px; border-radius:4px; display:flex; align-items:center;
+          justify-content:center; }
+  .task.active { background:#1b2740; box-shadow:inset 0 -2px 0 #2777ff; }
+  .pager { display:flex; gap:3px; }
+  .pager span { width:20px; height:20px; border:1px solid #2b2f3a; border-radius:3px;
+                font-size:11px; display:flex; align-items:center; justify-content:center;
+                color:#888a8d; }
+  .pager span.on { background:#2777ff; border-color:#2777ff; color:#fff; }
+  .cpu { display:flex; align-items:flex-end; gap:1px; height:22px; width:64px; }
+  .cpu i { flex:1; background:linear-gradient(0deg,#2777ff,#00e0e0); display:block; }
+  .vpn { font-family:'Fira Code',monospace; font-size:12px; color:#5ebdab; }
+  .clock { font-size:14px; }
+  /* Ícones de área de trabalho (48px) */
+  .dicons { position:absolute; top:52px; left:22px; display:flex; flex-direction:column; gap:20px; }
+  .dicon { width:88px; text-align:center; color:#fff; font-size:12.5px;
+           text-shadow:0 1px 3px rgba(0,0,0,.9); }
+  .dicon .ic { width:48px; height:48px; margin:0 auto 5px; }
+  /* Janelas Kali-Dark */
+  .win { color:#eeeeec; }
+  .titlebar { height:34px; background:#0d0e11; display:flex; align-items:center; padding:0 10px;
+              font-family:'Cantarell'; font-weight:700; font-size:13.5px; color:#eeeeec; }
+  .titlebar .l { color:#888a8d; margin-right:8px; }
+  .titlebar .r { margin-left:auto; display:flex; gap:14px; color:#888a8d; font-size:13px; }
+  .win.thunar { left:150px; top:150px; width:820px; height:470px; background:#23252e; }
+  .tb2 { height:36px; background:#272a34; display:flex; align-items:center; gap:14px;
+         padding:0 12px; font-size:13px; color:#b9bbc0; border-bottom:1px solid #1a1c23; }
+  .path { background:#1b1d24; border:1px solid #43495a; border-radius:5px; padding:3px 10px;
+          font-size:12.5px; color:#d7d9dd; }
+  .cols { display:flex; height:calc(100% - 70px); }
+  .nav { width:190px; background:#1f2128; padding:10px 6px; font-size:13.5px; color:#b9bbc0; }
+  .nav div { padding:6px 9px; border-radius:5px; }
+  .nav div.sel { background:#2777ff; color:#fff; }
+  .files2 { flex:1; padding:14px; display:grid; grid-template-columns:repeat(5,1fr); gap:12px;
+            align-content:start; font-size:12.5px; text-align:center; color:#dcdee2; }
+  .files2 .ic { width:48px; height:48px; margin:0 auto 5px; display:block;
+                object-fit:contain; }
+  .win.term { left:640px; top:400px; width:800px; height:420px;
+              background:rgba(31,34,41,.95); }
+  .term .titlebar { background:rgba(13,14,17,.95); }
+  .term .out { padding:12px 14px; }
+  .g { color:#5ebdab; } .b { color:#367bf0; } .w { color:#e6e6e6; } .y { color:#fea44c; }
+  .r { color:#d41919; } .c { color:#49aee6; } .gr { color:#888a8d; }
+</style></head><body>
+<div class="wall"></div>
+<div class="panel">
+  <img src="../assets/kali-panel-menu.svg">
+  <div class="sep"></div>
+  <div class="plug">🖥</div><div class="plug"><img src="../assets/icones/system-file-manager.svg"></div>
+  <div class="plug"><img src="../assets/icones/accessories-text-editor.svg"></div><div class="plug"><img src="../assets/icones/firefox-esr.svg"></div><div class="plug"><img src="../assets/icones/utilities-terminal.svg"></div>
+  <div class="sep"></div>
+  <div class="pager"><span class="on">1</span><span>2</span><span>3</span><span>4</span></div>
+  <div class="sep"></div>
+  <div class="plug">
+    <div class="task active"><img src="../assets/icones/system-file-manager.svg" style="width:20px"></div><div class="task"><img src="../assets/icones/utilities-terminal.svg" style="width:20px"></div><div class="task"><img src="../assets/icones/firefox-esr.svg" style="width:20px"></div>
+  </div>
+  <div class="grow"></div>
+  <div class="cpu"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i>
+    <i style="height:85%"></i><i style="height:55%"></i><i style="height:25%"></i>
+    <i style="height:60%"></i><i style="height:45%"></i><i style="height:75%"></i>
+    <i style="height:35%"></i><i style="height:50%"></i><i style="height:20%"></i></div>
+  <div class="plug">🔔 🔊 🔋</div>
+  <div class="vpn">VPN: —</div>
+  <div class="clock">09:41</div>
+  <div class="sep"></div>
+  <div class="plug">⏻</div>
+</div>
+<div class="dicons">
+  <div class="dicon"><img class="ic" src="../assets/icones/user-home.svg">Início</div>
+  <div class="dicon"><img class="ic" src="../assets/icones/drive-harddisk.svg">Sistema de arquivos</div>
+  <div class="dicon"><img class="ic" src="../assets/icones/user-trash.svg">Lixeira</div>
+</div>
+<div class="win thunar">
+  <div class="titlebar"><span class="l">☰</span>douglas-silva — Gerenciador de arquivos
+    <span class="r"><span>—</span><span>▢</span><span>✕</span></span></div>
+  <div class="tb2">← → ↑ ⟳ <span class="path">/home/douglas-silva</span> 🔍</div>
+  <div class="cols">
+    <div class="nav">
+      <div class="sel"><img src="../assets/icones/user-home.svg" style="width:17px;vertical-align:-3px;margin-right:6px">douglas-silva</div><div>🖥 Área de trabalho</div><div>⬇ Downloads</div>
+      <div>📄 Documentos</div><div>🖼 Imagens</div><div style="margin-top:8px">💾 Sistema de arquivos</div>
+      <div>🗑 Lixeira</div>
+    </div>
+    <div class="files2">
+      <div><img class="ic" src="../assets/icones/folder.svg">Desktop</div><div><img class="ic" src="../assets/icones/folder-documents.svg">Documents</div>
+      <div><img class="ic" src="../assets/icones/folder-download.svg">Downloads</div><div><img class="ic" src="../assets/icones/folder.svg">projetos</div>
+      <div><img class="ic" src="../assets/icones/folder.svg">www</div><div><img class="ic" src="../assets/icones/folder-pictures.svg">Pictures</div>
+      <div><img class="ic" src="../assets/icones/folder-videos.svg">Videos</div><div><img class="ic" src="../assets/icones/folder-music.svg">Music</div>
+    </div>
+  </div>
+</div>
+<div class="win term">
+  <div class="titlebar"><span class="l">☰</span>douglas-silva@kali: ~
+    <span class="r"><span>—</span><span>▢</span><span>✕</span></span></div>
+  <div class="out mono">
+    <div class="g">┌──(<span class="b">douglas-silva㉿kali</span>)-[<span class="w">~</span>]</div>
+    <div class="g">└─<span class="b">$</span> <span class="w">neofetch --off</span></div>
+    <div><span class="c">OS</span><span class="w">: Kali GNU/Linux Rolling x86_64</span></div>
+    <div><span class="c">DE</span><span class="w">: Xfce 4.20</span></div>
+    <div><span class="c">WM Theme</span><span class="w">: Kali-Dark</span></div>
+    <div><span class="c">Icons</span><span class="w">: Flat-Remix-Blue-Dark</span></div>
+    <div><span class="c">Font</span><span class="w">: Cantarell 11</span></div>
+    <div style="height:8px"></div>
+    <div class="g">┌──(<span class="b">douglas-silva㉿kali</span>)-[<span class="w">~</span>]</div>
+    <div class="g">└─<span class="b">$</span> <span class="w">ls --color</span></div>
+    <div><span class="b">Desktop</span>  <span class="b">Documents</span>  <span class="b">Downloads</span>  <span class="b">Pictures</span></div>
+    <div style="height:8px"></div>
+    <div class="g">┌──(<span class="b">douglas-silva㉿kali</span>)-[<span class="w">~</span>]</div>
+    <div class="g">└─<span class="b">$</span> <span style="background:#e6e6e6;color:#1f2229">&nbsp;</span></div>
+  </div>
+</div>
+<div class="badge">DEPOIS — Caminho Xfce: tema Kali-Dark, ícones Flat-Remix-Blue-Dark, painel e paleta oficiais do Kali (simulação)</div>
+</body></html>

@@ -1,0 +1,130 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>.badge{top:0!important;bottom:auto!important;border-top-right-radius:0;border-bottom-right-radius:8px}</style>
+<style>
+  .wall { background-image: url('../assets/kali-cubes.jpg'); }
+  /* Plasma: painel inferior, cores KaliDark (35,37,46) e destaque 39,119,255 */
+  .panel { position:absolute; bottom:0; left:0; right:0; height:44px; background:rgba(23,25,32,.94);
+           display:flex; align-items:center; gap:8px; padding:0 8px; color:#fff; font-size:13.5px;
+           border-top:1px solid #000; }
+  .panel img.kick { width:26px; height:26px; }
+  .tasks { display:flex; gap:6px; margin-left:6px; }
+  .tk { display:flex; align-items:center; gap:8px; padding:5px 12px; border-radius:4px;
+        background:rgba(255,255,255,.04); font-size:13px; color:#dcdee2; min-width:150px; }
+  .tk.active { background:#23252e; box-shadow:inset 0 -2px 0 #2777ff; color:#fff; }
+  .grow { flex:1; }
+  .tray { display:flex; gap:12px; align-items:center; font-size:15px; }
+  .pclock { text-align:center; line-height:1.15; font-size:13px; padding-left:6px; }
+  .pclock b { display:block; font-size:15px; }
+  /* Kickoff aberto */
+  .kickoff { position:absolute; bottom:52px; left:10px; width:640px; height:520px;
+             background:#23252e; border-radius:8px; box-shadow:0 18px 50px rgba(0,0,0,.6);
+             color:#eee; overflow:hidden; border:1px solid #0d0e11; }
+  .kickoff .top { height:56px; background:#1f2128; display:flex; align-items:center; gap:12px;
+                  padding:0 14px; }
+  .kickoff .search { flex:1; background:#171920; border:1px solid #43495a; border-radius:5px;
+                     padding:7px 12px; color:#888a8d; font-size:13px; }
+  .kk { display:flex; height:calc(100% - 56px); }
+  .kcat { width:190px; background:#1f2128; padding:10px 8px; font-size:13.5px; color:#b9bbc0; }
+  .kcat div { padding:8px 10px; border-radius:5px; }
+  .kcat div.sel { background:#2777ff; color:#fff; }
+  .kapps { flex:1; padding:12px; display:grid; grid-template-columns:repeat(2,1fr);
+           gap:6px; align-content:start; font-size:13.5px; }
+  .kapps div { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:5px;
+               color:#dcdee2; }
+  .kapps div.hl { background:rgba(39,119,255,.16); }
+  .kapps .sq { width:26px; height:26px; object-fit:contain; }
+  /* Dolphin + Konsole */
+  .win { color:#eee; }
+  .deco { height:32px; background:#23252e; display:flex; align-items:center; padding:0 10px;
+          font-size:13px; color:#fff; border-bottom:1px solid #0d0e11; }
+  .deco .m { color:#888a8d; margin-right:10px; }
+  .deco .r { margin-left:auto; display:flex; gap:16px; color:#c9cbd0; }
+  .win.dolphin { left:520px; top:90px; width:900px; height:500px; background:#23252e; }
+  .dtb { height:38px; background:#1f2128; display:flex; align-items:center; gap:14px;
+         padding:0 12px; font-size:13px; color:#b9bbc0; }
+  .crumb { background:#171920; border:1px solid #43495a; border-radius:4px; padding:4px 10px;
+           font-size:12.5px; color:#d7d9dd; }
+  .dcols { display:flex; height:calc(100% - 70px); }
+  .dplaces { width:210px; background:#1f2128; padding:10px 8px; font-size:13.5px; color:#b9bbc0; }
+  .dplaces div { padding:6px 9px; border-radius:4px; }
+  .dplaces div.sel { background:#2777ff; color:#fff; }
+  .dlist { flex:1; padding:10px 0; font-size:13.5px; }
+  .row { display:flex; align-items:center; gap:12px; padding:7px 16px; color:#dcdee2; }
+  .row.sel { background:rgba(39,119,255,.85); color:#fff; }
+  .row .sq { width:24px; height:24px; object-fit:contain; }
+  .win.konsole { left:880px; top:540px; width:690px; height:300px; background:rgba(31,34,41,.96); }
+  .konsole .out { padding:12px 14px; }
+  .g { color:#5ebdab; } .b { color:#367bf0; } .w { color:#e6e6e6; } .c { color:#49aee6; }
+</style></head><body>
+<div class="wall"></div>
+<div class="win dolphin">
+  <div class="deco"><span class="m">☰</span>douglas-silva — Dolphin
+    <span class="r"><span>—</span><span>▢</span><span>✕</span></span></div>
+  <div class="dtb">← → ↑ <span class="crumb">🏠 douglas-silva</span> 🔍 ⚙</div>
+  <div class="dcols">
+    <div class="dplaces">
+      <div style="color:#888a8d;font-size:12px;padding-left:9px">Locais</div>
+      <div class="sel">🏠 Início</div><div>🖥 Área de trabalho</div><div>📄 Documentos</div>
+      <div>⬇ Downloads</div><div>🖼 Imagens</div>
+      <div style="color:#888a8d;font-size:12px;padding:8px 0 2px 9px">Dispositivos</div>
+      <div>💾 Sistema</div>
+    </div>
+    <div class="dlist">
+      <div class="row"><img class="sq" src="../assets/icones/folder.svg">Desktop</div>
+      <div class="row sel"><img class="sq" src="../assets/icones/folder-documents.svg">Documents</div>
+      <div class="row"><img class="sq" src="../assets/icones/folder-download.svg">Downloads</div>
+      <div class="row"><img class="sq" src="../assets/icones/folder.svg">projetos</div>
+      <div class="row"><img class="sq" src="../assets/icones/folder.svg">www</div>
+      <div class="row"><img class="sq" src="../assets/icones/folder-pictures.svg">Pictures</div>
+      <div class="row"><img class="sq" src="../assets/icones/folder-videos.svg">Videos</div>
+    </div>
+  </div>
+</div>
+<div class="win konsole">
+  <div class="deco"><span class="m">☰</span>douglas-silva@kali : ~ — Konsole
+    <span class="r"><span>—</span><span>▢</span><span>✕</span></span></div>
+  <div class="out mono">
+    <div class="g">┌──(<span class="b">douglas-silva㉿kali</span>)-[<span class="w">~</span>]</div>
+    <div class="g">└─<span class="b">$</span> <span class="w">plasma-apply-lookandfeel -a org.kali.kalidark.desktop</span></div>
+    <div class="c">Tema global aplicado: Kali-Dark</div>
+    <div style="height:6px"></div>
+    <div class="g">┌──(<span class="b">douglas-silva㉿kali</span>)-[<span class="w">~</span>]</div>
+    <div class="g">└─<span class="b">$</span> <span style="background:#e6e6e6;color:#1f2229">&nbsp;</span></div>
+  </div>
+</div>
+<div class="kickoff">
+  <div class="top">
+    <img src="../assets/kali-panel-menu.svg" style="width:34px;height:34px">
+    <div class="search">Procurar…</div>
+  </div>
+  <div class="kk">
+    <div class="kcat">
+      <div class="sel">⭐ Favoritos</div><div>🖥 Sistema</div><div>🌐 Internet</div>
+      <div>🛠 Utilitários</div><div>🎨 Gráficos</div><div>🎵 Multimídia</div><div>⚙ Configurações</div>
+    </div>
+    <div class="kapps">
+      <div class="hl"><img class="sq" src="../assets/icones/utilities-terminal.svg">Konsole</div>
+      <div><img class="sq" src="../assets/icones/system-file-manager.svg">Dolphin</div>
+      <div><img class="sq" src="../assets/icones/accessories-text-editor.svg">Kate</div>
+      <div><img class="sq" src="../assets/icones/firefox-esr.svg">Firefox ESR</div>
+      <div><img class="sq" src="../assets/icones/system-search.svg">Spectacle</div>
+      <div><img class="sq" src="../assets/icones/preferences-system.svg">KCalc</div>
+      <div><img class="sq" src="../assets/icones/folder.svg">Ark</div>
+      <div><img class="sq" src="../assets/icones/preferences-system.svg">Monitor do sistema</div>
+      <div><img class="sq" src="../assets/icones/folder-pictures.svg">Gwenview</div>
+      <div><img class="sq" src="../assets/icones/folder-documents.svg">Okular</div>
+    </div>
+  </div>
+</div>
+<div class="panel">
+  <img class="kick" src="../assets/kali-panel-menu.svg">
+  <div class="tasks">
+    <div class="tk active"><img src="../assets/icones/system-file-manager.svg" style="width:20px">douglas-silva — Dolphin</div>
+    <div class="tk"><img src="../assets/icones/utilities-terminal.svg" style="width:20px">douglas-silva@kali : ~</div>
+  </div>
+  <div class="grow"></div>
+  <div class="tray">🔔 🔊 📶 🔋 ⌨</div>
+  <div class="pclock"><b>09:41</b>qui, 3 de set</div>
+</div>
+<div class="badge">DEPOIS — Caminho KDE Plasma: tema global org.kali.kalidark, esquema KaliDark, ícones Flat-Remix-Blue-Dark (simulação)</div>
+</body></html>

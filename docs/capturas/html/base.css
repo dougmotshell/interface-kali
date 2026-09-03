@@ -1,0 +1,14 @@
+@font-face { font-family: 'Cantarell'; src: url('../assets/cantarell-400.ttf'); font-weight: 400; }
+@font-face { font-family: 'Cantarell'; src: url('../assets/cantarell-700.ttf'); font-weight: 700; }
+@font-face { font-family: 'Fira Code'; src: url('../assets/firacode-500.ttf'); font-weight: 500; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1600px; height: 900px; overflow: hidden; }
+body { font-family: 'Cantarell', sans-serif; font-size: 15px; position: relative; }
+.wall { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.win { position: absolute; border-radius: 10px; overflow: hidden;
+       box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.6); }
+.mono { font-family: 'Fira Code', monospace; font-size: 14.5px; line-height: 1.55; }
+.badge { position: absolute; left: 0; bottom: 0; z-index: 99; background: rgba(0,0,0,.72);
+         color: #fff; font-size: 13px; padding: 6px 14px; border-top-right-radius: 8px;
+         letter-spacing: .02em; }
+.tb { display: flex; align-items: center; gap: 10px; }

@@ -1,0 +1,97 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+  .wall { background-image: url('../assets/kali-cubes.jpg'); }
+  /* GNOME com tema de shell Kali-Dark + dash-to-dock à esquerda */
+  .topbar { position:absolute; top:0; left:0; right:0; height:32px; background:#0d0e11;
+            color:#eeeeec; display:flex; align-items:center; padding:0 14px; font-size:14px; }
+  .topbar .mid { position:absolute; left:50%; transform:translateX(-50%); font-weight:700; }
+  .topbar .right { margin-left:auto; display:flex; gap:12px; align-items:center; font-size:14px; }
+  .dock { position:absolute; left:6px; top:50%; transform:translateY(-50%);
+          background:rgba(13,14,17,.9); border-radius:12px; padding:8px 6px;
+          display:flex; flex-direction:column; gap:10px; border:1px solid rgba(255,255,255,.07); }
+  .dock .app { width:46px; height:46px; border-radius:9px; display:flex; align-items:center;
+               justify-content:center; font-size:21px; position:relative; }
+  .dock .app .dots { position:absolute; right:-3px; top:50%; transform:translateY(-50%);
+                     display:flex; flex-direction:column; gap:3px; }
+  .dock .app .dots i { width:4px; height:4px; border-radius:50%; background:#2777ff; display:block; }
+  .win { color:#eeeeec; }
+  .hdr { height:46px; background:#2b2d34; display:flex; align-items:center; padding:0 12px;
+         font-weight:700; font-size:14px; border-bottom:1px solid #16181d; }
+  .hdr .btns { margin-left:auto; display:flex; gap:8px; }
+  .hdr .btns i { width:24px; height:24px; border-radius:50%; background:#3a3d46; display:block; }
+  .win.files { left:340px; top:110px; width:880px; height:520px; background:#23252e; }
+  .body { display:flex; height:calc(100% - 46px); }
+  .side { width:215px; background:#1f2128; padding:12px 8px; font-size:14px; }
+  .side div { padding:7px 10px; border-radius:7px; color:#b9bbc0; }
+  .side div.sel { background:#2777ff; color:#fff; }
+  .grid { flex:1; padding:16px; display:grid; grid-template-columns:repeat(5,1fr); gap:14px;
+          align-content:start; font-size:13px; text-align:center; color:#dcdee2; }
+  .grid .ic { width:52px; height:52px; margin:0 auto 6px; display:block;
+              object-fit:contain; }
+  .win.term { left:200px; top:520px; width:760px; height:330px; background:rgba(31,34,41,.95); }
+  .term .hdr { background:rgba(43,45,52,.95); }
+  .term .out { padding:12px 14px; }
+  .g { color:#5ebdab; } .b { color:#367bf0; } .w { color:#e6e6e6; } .c { color:#49aee6; }
+  .qs { position:absolute; right:10px; top:38px; width:330px; background:#0d0e11;
+        border-radius:12px; padding:14px; color:#eee; box-shadow:0 14px 40px rgba(0,0,0,.6);
+        border:1px solid #23252e; }
+  .qs .row { display:flex; gap:10px; margin-bottom:10px; }
+  .qs .tile { flex:1; background:#23252e; border-radius:10px; padding:10px; font-size:12.5px;
+              text-align:center; }
+  .qs .tile.on { background:#2777ff; }
+  .qs .sl { height:8px; border-radius:4px; background:#23252e; margin:12px 0; position:relative; }
+  .qs .sl i { position:absolute; left:0; top:0; bottom:0; width:62%; background:#2777ff;
+              border-radius:4px; display:block; }
+</style></head><body>
+<div class="wall"></div>
+<div class="topbar">
+  <span>Atividades</span>
+  <div class="mid">qui, 3 de set  09:41</div>
+  <div class="right"><span>🔊</span><span>📶</span><span>🔋</span><span>⌄</span></div>
+</div>
+<div class="win files">
+  <div class="hdr"><img src="../assets/icones/user-home.svg" style="width:20px;margin-right:8px">Início <div class="btns"><i></i><i></i><i></i></div></div>
+  <div class="body">
+    <div class="side">
+      <div class="sel">🏠 Início</div><div>🖥 Área de trabalho</div><div>⬇ Downloads</div>
+      <div>📄 Documentos</div><div>🖼 Imagens</div><div>🎵 Música</div>
+    </div>
+    <div class="grid">
+      <div><img class="ic" src="../assets/icones/folder.svg">Desktop</div><div><img class="ic" src="../assets/icones/folder-documents.svg">Documents</div>
+      <div><img class="ic" src="../assets/icones/folder-download.svg">Downloads</div><div><img class="ic" src="../assets/icones/folder.svg">projetos</div>
+      <div><img class="ic" src="../assets/icones/folder.svg">www</div><div><img class="ic" src="../assets/icones/folder-pictures.svg">Pictures</div>
+      <div><img class="ic" src="../assets/icones/folder-videos.svg">Videos</div><div><img class="ic" src="../assets/icones/folder-music.svg">Music</div>
+    </div>
+  </div>
+</div>
+<div class="win term">
+  <div class="hdr">douglas-silva@kali: ~ <div class="btns"><i></i><i></i><i></i></div></div>
+  <div class="out mono">
+    <div class="g">┌──(<span class="b">douglas-silva㉿kali</span>)-[<span class="w">~</span>]</div>
+    <div class="g">└─<span class="b">$</span> <span class="w">gsettings get org.gnome.shell.extensions.user-theme name</span></div>
+    <div class="c">'Kali-Dark'</div>
+    <div style="height:6px"></div>
+    <div class="g">┌──(<span class="b">douglas-silva㉿kali</span>)-[<span class="w">~</span>]</div>
+    <div class="g">└─<span class="b">$</span> <span style="background:#e6e6e6;color:#1f2229">&nbsp;</span></div>
+  </div>
+</div>
+<div class="qs">
+  <div class="row">
+    <div class="tile on">📶<br>Wi-Fi</div><div class="tile">🔵<br>Bluetooth</div>
+    <div class="tile">🌙<br>Noturno</div>
+  </div>
+  <div class="sl"><i></i></div>
+  <div style="display:flex;justify-content:space-between;font-size:12.5px;color:#b9bbc0">
+    <span>douglas-silva</span><span>⚙ ⏻</span></div>
+</div>
+<div class="dock">
+  <div class="app"><img src="../assets/icones/utilities-terminal.svg" style="width:40px"><div class="dots"><i></i></div></div>
+  <div class="app"><img src="../assets/icones/system-file-manager.svg" style="width:40px"><div class="dots"><i></i></div></div>
+  <div class="app"><img src="../assets/icones/accessories-text-editor.svg" style="width:40px"></div>
+  <div class="app"><img src="../assets/icones/firefox-esr.svg" style="width:40px"></div>
+  <div class="app"><img src="../assets/icones/system-search.svg" style="width:40px"></div>
+  <div class="app"><img src="../assets/icones/preferences-system.svg" style="width:40px"></div>
+  <div class="app" style="background:#23252e;color:#b9bbc0">⋯</div>
+</div>
+<div class="badge">DEPOIS — Caminho GNOME: adw-gtk3-dark + tema de shell Kali-Dark + Flat-Remix-Blue-Dark + dash-to-dock (simulação)</div>
+</body></html>
