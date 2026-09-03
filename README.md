@@ -35,10 +35,22 @@ pasta.
 ## Começar
 
 ```bash
-cd ~/Desktop/interface-kali/scripts
-./kali-look.sh              # menu interativo: instalar, aplicar, reverter, remover
-./kali-look.sh status       # o que está aplicado agora nesta máquina
+git clone git@github.com:dougmotshell/interface-kali.git
+cd interface-kali
+./scripts/kali-look.sh status   # o que está aplicado na sua máquina agora
+./scripts/kali-look.sh          # menu: instalar, aplicar, reverter, remover
 ```
+
+Os scripts se localizam pela própria posição no repositório — clone onde quiser.
+
+**Pré-requisitos.** Ubuntu 24.04 (ou Debian equivalente), `curl`, `dpkg-deb` e
+`git`. O material foi validado em GNOME 46 (Wayland), Xfce 4.18 e Plasma 5.27;
+em versões diferentes o essencial vale, e o que muda está anotado nos guias.
+`google-chrome` só é necessário para regerar os comparativos visuais.
+
+**O guia 01 descreve a máquina de referência**, não a sua. Rode
+`./scripts/kali-look.sh status` e `./scripts/50-analise-wayland-xorg.sh` para
+obter o retrato do seu sistema antes de decidir qualquer coisa.
 
 O menu cobre todo o ciclo: baixar assets, instalar um ambiente, aplicar a
 aparência, reverter, desinstalar. Tudo aceita `--dry-run`, e ações de risco pedem
@@ -122,3 +134,22 @@ própria configuração e o GDM lista todas.
 Nada aqui exige reinstalar o sistema, e nada aqui adiciona repositório do Kali ao
 APT — o porquê está em
 [`docs/guias/03-obter-os-assets-oficiais.md`](docs/guias/03-obter-os-assets-oficiais.md).
+
+## Licença
+
+O conteúdo próprio deste repositório — guias, scripts, índices e os HTML dos
+comparativos — está sob **MIT** (veja [`LICENSE`](LICENSE)).
+
+Material de terceiros mantém a licença de origem e **não** é relicenciado:
+
+| O quê | Origem | Licença |
+|---|---|---|
+| Configurações em `docs/referencia/` | pacotes `kali-themes`, `kali-themes-common`, `kali-defaults` | GPL-3.0+ — Kali Devel Team |
+| Wallpaper `kali-cubes` e ícones `Flat-Remix-Blue-Dark` em `docs/capturas/assets/` | `kali-wallpapers-2026`, `kali-themes-common` | GPL-3.0+ — Kali Devel Team |
+| Ícones Yaru usados no comparativo "antes" | `yaru-theme-icon` (Ubuntu) | GPL-3.0+ — Canonical Ltd. |
+| Fontes Cantarell e Fira Code | Google Fonts | SIL Open Font License 1.1 |
+
+"Kali Linux" e o dragão são marcas da OffSec. Este é um projeto pessoal,
+independente e **não** afiliado à OffSec nem ao projeto Kali Linux: ele apenas
+documenta como reproduzir a aparência usando os pacotes públicos da distribuição.
+Nenhuma ferramenta de pentest é instalada ou distribuída aqui.
