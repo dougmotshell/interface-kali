@@ -5,20 +5,44 @@
 #   bash 10-baixar-assets.sh                     # só baixa e extrai em ~/.cache/kali-assets
 #   bash 10-baixar-assets.sh --instalar-usuario  # copia para o $HOME (reversível, recomendado)
 #   bash 10-baixar-assets.sh --instalar-sistema  # dpkg -i (necessário p/ GRUB, Plymouth, GDM)
+#   bash 10-baixar-assets.sh --help
+#
+# Variáveis de ambiente (para fixar ou atualizar versões sem editar o script):
+#   KALI_THEMES_VER      versão de kali-themes-common     (padrão 2026.3.0)
+#   KALI_WALLPAPERS_VER  versão de kali-wallpapers-2026    (padrão 2026.1.0)
+#   ADW_GTK3_VER         versão de adw-gtk3-kali           (padrão 2026.2.0)
+#   KALI_WALLPAPERS_PKG  nome do pacote de wallpapers      (padrão kali-wallpapers-2026)
+#   KALI_MIRROR          base do pool                      (padrão https://kali.download/kali/pool/main)
+#   KALI_ASSETS_CACHE    onde baixar/extrair               (padrão ~/.cache/kali-assets)
+#
+# Para descobrir versões novas, liste o diretório do pool:
+#   curl -sL https://kali.download/kali/pool/main/k/kali-themes/ | grep -oE 'href="[^"]+\.deb"'
 #
 # NÃO adiciona repositório do Kali ao APT.
 set -euo pipefail
 
-BASE="https://kali.download/kali/pool/main"
-CACHE="$HOME/.cache/kali-assets"
+BASE="${KALI_MIRROR:-https://kali.download/kali/pool/main}"
+CACHE="${KALI_ASSETS_CACHE:-$HOME/.cache/kali-assets}"
 STAGE="$CACHE/extraido"
 MODO="${1:-}"
 
+KALI_THEMES_VER="${KALI_THEMES_VER:-2026.3.0}"
+KALI_WALLPAPERS_PKG="${KALI_WALLPAPERS_PKG:-kali-wallpapers-2026}"
+KALI_WALLPAPERS_VER="${KALI_WALLPAPERS_VER:-2026.1.0}"
+ADW_GTK3_VER="${ADW_GTK3_VER:-2026.2.0}"
+
 DEBS=(
-  "$BASE/k/kali-themes/kali-themes-common_2026.3.0_all.deb"
-  "$BASE/k/kali-wallpapers/kali-wallpapers-2026_2026.1.0_all.deb"
-  "$BASE/a/adw-gtk3-kali/adw-gtk3-kali_2026.2.0_all.deb"
+  "$BASE/k/kali-themes/kali-themes-common_${KALI_THEMES_VER}_all.deb"
+  "$BASE/k/kali-wallpapers/${KALI_WALLPAPERS_PKG}_${KALI_WALLPAPERS_VER}_all.deb"
+  "$BASE/a/adw-gtk3-kali/adw-gtk3-kali_${ADW_GTK3_VER}_all.deb"
 )
+
+if [ "$MODO" = "--help" ] || [ "$MODO" = "-h" ]; then
+  sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  echo "Pacotes que serão baixados:"
+  printf '  %s\n' "${DEBS[@]}"
+  exit 0
+fi
 
 mkdir -p "$CACHE" "$STAGE"
 cd "$CACHE"
@@ -71,8 +95,8 @@ case "$MODO" in
     ;;
   --instalar-sistema)
     echo "== instalando com dpkg (pede sudo) =="
-    sudo dpkg -i "$CACHE/kali-wallpapers-2026_2026.1.0_all.deb" \
-                 "$CACHE/kali-themes-common_2026.3.0_all.deb" || true
+    sudo dpkg -i "$CACHE/${KALI_WALLPAPERS_PKG}_${KALI_WALLPAPERS_VER}_all.deb" \
+                 "$CACHE/kali-themes-common_${KALI_THEMES_VER}_all.deb" || true
     # adw-gtk3-kali declara Breaks: libgtk-4-1 (<< 4.16); no Ubuntu 24.04 (GTK4 4.14)
     # instalamos o tema no $HOME em vez de forçar o dpkg
     mkdir -p "$HOME/.themes"

@@ -11,9 +11,9 @@
 #   bash 50-analise-wayland-xorg.sh --help
 set -euo pipefail
 
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOC_DIR="$(dirname "$BASE_DIR")"
-REL_DIR="$DOC_DIR/relatorios"
+BASE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROJ="$(dirname "$BASE_DIR")"
+REL_DIR="$PROJ/relatorios"
 MOSTRAR=1
 GRAVAR=1
 

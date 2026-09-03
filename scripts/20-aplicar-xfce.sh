@@ -3,8 +3,12 @@
 # Uso: bash 20-aplicar-xfce.sh
 set -euo pipefail
 
-REF="$HOME/Desktop/interface-kali/docs/referencia"
-[ -d "$REF" ] || { echo "referência não encontrada em $REF"; exit 1; }
+# Caminhos resolvidos a partir da localização deste script: o projeto funciona
+# em qualquer diretório, clonado por qualquer usuário.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROJ="$(dirname -- "$SCRIPT_DIR")"
+REF="$PROJ/docs/referencia"
+[ -d "$REF" ] || { echo "docs/referencia não encontrada (procurei em $REF)"; exit 1; }
 
 if ! command -v xfconf-query >/dev/null; then
   echo "xfconf-query não encontrado — instale o Xfce primeiro (veja docs/guias/04-ambiente-xfce.md)"; exit 1

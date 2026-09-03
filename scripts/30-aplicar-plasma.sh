@@ -3,7 +3,12 @@
 # Uso: bash 30-aplicar-plasma.sh
 set -euo pipefail
 
-REF="$HOME/Desktop/interface-kali/docs/referencia/kde"
+# Caminhos resolvidos a partir da localização deste script: o projeto funciona
+# em qualquer diretório, clonado por qualquer usuário.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROJ="$(dirname -- "$SCRIPT_DIR")"
+REF="$PROJ/docs/referencia/kde"
+[ -d "$REF" ] || { echo "docs/referencia/kde não encontrada (procurei em $REF)"; exit 1; }
 KW=$(command -v kwriteconfig5 || command -v kwriteconfig6 || true)
 [ -n "$KW" ] || { echo "kwriteconfig5 não encontrado — instale o Plasma primeiro"; exit 1; }
 

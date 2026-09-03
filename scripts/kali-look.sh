@@ -1,15 +1,20 @@
 #!/usr/bin/env bash
 # kali-look.sh — ponto de entrada único para instalar, aplicar, reverter e
-# remover a aparência do Kali Linux neste Ubuntu 24.04.
+# remover a aparência do Kali Linux em Ubuntu/Debian.
+#
+# Testado em Ubuntu 24.04 (GNOME 46, Xfce 4.18, Plasma 5.27). Em outra versão ou
+# distribuição os passos valem, mas nomes e versões de pacote podem divergir —
+# o `status` avisa quando o sistema não é o testado.
 #
 # Sem argumentos abre um menu interativo. Com argumentos, funciona como CLI.
-# Documentação: ../README.md e os arquivos 01..10 na pasta acima.
+# Documentação: ../README.md e os 13 guias em ../docs/guias/.
 set -euo pipefail
 
 VERSAO="1.0"
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOC_DIR="$(dirname "$BASE_DIR")"
-REF_DIR="$DOC_DIR/referencia"
+# Resolvidos a partir da localização do script: funciona em qualquer diretório.
+BASE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROJ="$(dirname -- "$BASE_DIR")"
+REF_DIR="$PROJ/docs/referencia"
 STATE_DIR="$HOME/.local/state/kali-look-backup"
 LOG="$STATE_DIR/kali-look.log"
 
@@ -173,6 +178,28 @@ apt_disponiveis() {
   done
 }
 
+# Avisa (sem abortar) quando o sistema não é a base em que este material foi
+# testado. Nada aqui é específico do Ubuntu, mas nomes e versões de pacote e os
+# valores de reversão variam por distribuição.
+checa_base_testada() {
+  local id="" ver="" like=""
+  if [ -r /etc/os-release ]; then
+    id="$(. /etc/os-release && echo "${ID:-}")"
+    ver="$(. /etc/os-release && echo "${VERSION_ID:-}")"
+    like="$(. /etc/os-release && echo "${ID_LIKE:-}")"
+  fi
+  if [ "$id" = "ubuntu" ] && [ "$ver" = "24.04" ]; then
+    return 0
+  fi
+  if [ "$id" = "debian" ] || [ "$id" = "ubuntu" ] || case "$like" in *debian*) true ;; *) false ;; esac; then
+    aviso "base testada: Ubuntu 24.04. Aqui é ${id:-?} ${ver:-?} — os passos valem,"
+    aviso "mas versões de pacote (Xfce, Plasma, GNOME) e o tema de reversão diferem."
+  else
+    aviso "este material foi feito para Ubuntu/Debian; ${id:-sistema desconhecido} não foi testado."
+    aviso "nomes de pacote e caminhos de /usr/share podem não existir aqui."
+  fi
+}
+
 # ================================================================== STATUS ====
 cmd_status() {
   titulo "Sistema"
@@ -183,6 +210,8 @@ cmd_status() {
   printf '  login manager : %s\n' "$(cat /etc/X11/default-display-manager 2>/dev/null || echo '?')"
   printf '  disco em / ...: %s livres (%s em uso)\n' \
     "$(df -h / | awk 'NR==2{print $4}')" "$(df -h / | awk 'NR==2{print $5}')"
+  printf '  projeto ......: %s\n' "$PROJ"
+  checa_base_testada
 
   titulo "Aparência em uso"
   if tem gsettings; then
@@ -328,6 +357,7 @@ oferta_display_manager() {
 }
 
 cmd_instalar() {
+  checa_base_testada
   case "${1:-}" in
     xfce)
       titulo "Instalar ambiente Xfce"
@@ -350,6 +380,7 @@ cmd_instalar() {
 
 # ================================================================= APLICAR ====
 cmd_aplicar() {
+  checa_base_testada
   case "${1:-}" in
     xfce)
       exige_assets || return 1
@@ -782,7 +813,7 @@ EXEMPLOS
   $0 --sim terminal gnome             # sem perguntas
 
 Log de tudo o que foi feito: $LOG
-Documentação completa: $DOC_DIR/README.md
+Documentação completa: $PROJ/README.md
 AJUDA_EOF
 }
 
