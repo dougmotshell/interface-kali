@@ -146,8 +146,11 @@ Material de terceiros mantém a licença de origem e **não** é relicenciado:
 |---|---|---|
 | Configurações em `docs/referencia/` | pacotes `kali-themes`, `kali-themes-common`, `kali-defaults` | GPL-3.0+ — Kali Devel Team |
 | Wallpaper `kali-cubes` e ícones `Flat-Remix-Blue-Dark` em `docs/capturas/assets/` | `kali-wallpapers-2026`, `kali-themes-common` | GPL-3.0+ — Kali Devel Team |
-| Ícones Yaru usados no comparativo "antes" | `yaru-theme-icon` (Ubuntu) | GPL-3.0+ — Canonical Ltd. |
+| Ícones Yaru usados no comparativo "antes" | `yaru-theme-icon` (Ubuntu) | CC-BY-SA-4.0 — Sam Hewitt |
 | Fontes Cantarell e Fira Code | Google Fonts | SIL Open Font License 1.1 |
+
+Detalhamento em [`docs/capturas/CREDITOS.md`](docs/capturas/CREDITOS.md) e
+[`docs/referencia/CREDITOS.md`](docs/referencia/CREDITOS.md).
 
 "Kali Linux" e o dragão são marcas da OffSec. Este é um projeto pessoal,
 independente e **não** afiliado à OffSec nem ao projeto Kali Linux: ele apenas
