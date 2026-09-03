@@ -20,6 +20,22 @@ Mais: transparência de 5% (`BackgroundDarkness=0.95`), negrito em cor clara
 (`bold-is-bright`), histórico ilimitado, sem confirmação ao fechar e fonte
 `Fira Code Medium 10`.
 
+Essas 16 cores são as **cores ANSI**: elas pintam o que o programa colore (o
+`ls`, o `git`, o próprio prompt). O texto que **você digita**, o fundo, o cursor
+e a seleção saem de outro par, o de primeiro plano e fundo — que a tabela acima
+não contém:
+
+| Papel | Hex | Origem |
+|---|---|---|
+| primeiro plano (texto digitado) | `#FFFFFF` | `docs/referencia/kde/Kali-Dark.colorscheme`, `[Foreground] Color=255,255,255` |
+| fundo | `#23252E` | `docs/referencia/kde/Kali-Dark.colorscheme`, `[Background] Color=35,37,46` |
+
+O Kali não grava esse par nos terminais GTK: o `xfce4-terminalrc` traz
+`ColorUseTheme=TRUE` e o `Kali.json` do tilix traz `use-theme-colors: true` — os
+dois pedem o par **ao tema GTK**, que no Kali é o `Kali-Dark`
+(`theme_fg_color #eeeeec`, `theme_bg_color #23252e`). Aqui o tema GTK pode ser
+outro, e é daí que vem o texto digitado numa cor que não é do Kali (§7.5).
+
 ## 7.2 xfce4-terminal (ambiente Xfce)
 
 ```bash
@@ -72,7 +88,11 @@ P=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
 G="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$P/"
 
 gsettings set $G palette "['#1F2229','#D41919','#5EBDAB','#FEA44C','#367BF0','#9755B3','#49AEE6','#E6E6E6','#198388','#EC0101','#47D4B9','#FF8A18','#277FFF','#962AC3','#05A1F7','#FFFFFF']"
-gsettings set $G use-theme-colors true
+# NÃO use `use-theme-colors true` (o que o Kali faz) num Ubuntu cujo tema GTK
+# pode não ser o Kali-Dark: o texto digitado sairia na cor do tema. §7.1 explica.
+gsettings set $G use-theme-colors false
+gsettings set $G foreground-color "'#FFFFFF'"
+gsettings set $G background-color "'#23252E'"
 gsettings set $G bold-is-bright true
 gsettings set $G scrollback-unlimited true
 gsettings set $G use-transparent-background true
@@ -105,12 +125,25 @@ O `Kali.json` é só o esquema — ele fica disponível na lista, mas não se ap
 sozinho. O tilix guarda o perfil no `dconf`:
 
 ```bash
-U=$(dconf list /com/gexperts/Tilix/profiles/ | grep '/$' | head -1 | tr -d '/')
+# o perfil que o tilix abre é o `default`; a lista só serve de reserva, e quem
+# tem mais de um perfil acertaria o perfil errado configurando o primeiro
+U=$(dconf read /com/gexperts/Tilix/profiles/default | tr -d "'")
+[ -n "$U" ] || U=$(dconf list /com/gexperts/Tilix/profiles/ | grep '/$' | head -1 | tr -d '/')
 B=/com/gexperts/Tilix/profiles/$U
 
 # as 16 cores de /usr/share/tilix/schemes/Kali.json
 dconf write $B/palette "['#1F2229', '#D41919', '#5EBDAB', '#FEA44C', '#367bf0', '#9755b3', '#49AEE6', '#E6E6E6', '#198388', '#EC0101', '#47D4B9', '#FF8A18', '#277FFF', '#962ac3', '#05A1F7', '#FFFFFF']"
-dconf write $B/use-theme-colors true        # também vem do Kali.json
+# primeiro plano e fundo: fixos nos valores do Kali, NÃO herdados do tema GTK.
+# O `use-theme-colors: true` do Kali.json é o que faz o texto digitado sair com a
+# cor do tema ativo (Yaru, Adwaita…) em vez da do Kali — veja §7.1 e o sintoma
+# no fim desta seção. O tilix grava cor em #RRRRGGGGBBBB, a forma que ele relê.
+dconf write $B/use-theme-colors false
+dconf write $B/foreground-color "'#FFFFFFFFFFFF'"
+dconf write $B/background-color "'#232325252E2E'"
+# cursor, seleção e negrito sem cor própria: derivados do par acima, não do tema
+dconf write $B/cursor-colors-set false
+dconf write $B/highlight-colors-set false
+dconf write $B/bold-color-set false
 
 # fonte: xsettings.xml do Kali define MonospaceFontName = Fira Code Medium 10.
 # Sem isto o tilix usa a fonte mono do GNOME, que é outra.
@@ -123,6 +156,22 @@ dconf write $B/background-transparency-percent 5
 ```
 
 Ou `scripts/kali-look.sh terminal tilix`. Desfazer: `dconf reset -f $B/`.
+
+**Sintoma: a paleta está certa e o texto que você digita está fora dela.** É o
+`use-theme-colors`. Com ele ligado, a paleta de 16 cores continua sendo a do Kali
+— o `ls` e o `git` saem certos —, mas o texto digitado, o fundo, o cursor e a
+seleção vêm do tema GTK do momento. Num Ubuntu isso costuma ser Yaru ou Adwaita,
+e no Xfce o valor que vale é o do `xfconf`, não o do `gsettings`:
+
+```bash
+dconf read /com/gexperts/Tilix/profiles/$U/use-theme-colors   # true = herda do tema
+xfconf-query -c xsettings -p /Net/ThemeName                   # tema GTK no Xfce
+gsettings get org.gnome.desktop.interface gtk-theme           # tema GTK no GNOME
+```
+
+Se os dois últimos discordam, o texto digitado muda de cor conforme a sessão em
+que o tilix abre — o mesmo perfil, dois resultados. Fixar o par
+primeiro-plano/fundo (acima) tira o tema GTK da conta e resolve nas duas.
 
 Para os demais (`alacritty`, `terminator`, `qterminal`, `yakuake`) o runbook não
 tem receita automática: use a paleta de §7.1 na configuração de cada um.
@@ -150,13 +199,56 @@ bloco do prompt ao fim do seu arquivo:
 setopt promptsubst
 PROMPT_EOL_MARK=""
 prompt_symbol=㉿
-PROMPT=$'%F{%(#.blue.green)}┌──${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}(%B%F{%(#.red.blue)}%n'$prompt_symbol$'%m%b%F{%(#.blue.green)})-[%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+# os dois lados do ㉿: %n = usuário da sessão, %m = nome da máquina
+prompt_user=${KALI_PROMPT_USER:-%n}
+prompt_host=${KALI_PROMPT_HOST:-%m}
+PROMPT=$'%F{%(#.blue.green)}┌──${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}(%B%F{%(#.red.blue)}'$prompt_user$prompt_symbol$prompt_host$'%b%F{%(#.blue.green)})-[%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
 # opcional: código de saída e jobs à direita
 # RPROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)'
 # linha em branco antes de cada prompt
 precmd() { print "" }
 # ---------------------------------------------------------------------------
 ```
+
+O bloco do Kali usa `%n` e `%m` direto no `PROMPT`; aqui eles passam por duas
+variáveis para que os rótulos possam ser trocados sem reescrever a linha do
+`PROMPT` — que é o único lugar do runbook onde um erro de escape estraga o
+prompt sem avisar.
+
+### Trocar os rótulos dos dois lados do ㉿
+
+`%n` é o usuário da sessão e `%m` o nome da máquina. Num Ubuntu de trabalho os
+dois costumam ser longos e redundantes — o hostname vindo do instalador repete o
+nome do usuário e acrescenta o modelo do equipamento —, e o prompt do Kali fica
+com meia linha ocupada antes do caminho:
+
+```bash
+scripts/kali-look.sh prompt rotulo dev lab      # ┌──(dev㉿lab)-[~]
+scripts/kali-look.sh prompt rotulo --padrao     # volta ao %n㉿%m
+scripts/kali-look.sh prompt rotulo              # mostra o que está gravado
+scripts/kali-look.sh prompt aplicar dev lab     # já aplica o bloco com os rótulos
+```
+
+O que isso muda e o que não muda:
+
+- Muda **só o texto do prompt**. Nem o usuário da sessão, nem o hostname da
+  máquina, nem o que o `ssh`, o `hostname` ou um log mostram.
+- Rótulo aceita letra, dígito, ponto, hífen e sublinhado. Sem espaço e sem `%` —
+  `%` é sequência de prompt do zsh, e um rótulo com `%` viraria outra coisa na
+  tela.
+- `KALI_PROMPT_USER` e `KALI_PROMPT_HOST` no ambiente ganham do valor gravado:
+  `KALI_PROMPT_HOST=prod zsh` testa um rótulo sem editar arquivo.
+- Aba já aberta não muda: o zsh lê o `.zshrc` ao iniciar. E o `status` passa a
+  mostrar o par gravado:
+
+```bash
+scripts/kali-look.sh status | grep 'prompt no zsh'
+#   prompt no zsh : aplicado — (dev㉿lab)
+```
+
+Se o bloco no seu `.zshrc` for de uma versão anterior a esta (sem as linhas
+`prompt_user`/`prompt_host`), o `prompt rotulo` reescreve o bloco inteiro, com
+backup em `~/.zshrc.bak-<data>` — ele avisa quando faz isso.
 
 ### Quando o bloco está no arquivo e o prompt não muda
 

@@ -1,0 +1,15 @@
+# shellcheck deste runbook — o que está desligado, e por quê.
+#
+# SC2015  "A && B || C não é if-then-else"
+#   É a convenção do projeto, registrada em AGENTS.md § Armadilhas: em script com
+#   `set -e`, um `[ teste ] && comando` isolado aborta a execução quando o teste
+#   falha, e a forma sancionada é terminar com `|| true`. O aviso dispara em todas
+#   essas linhas — que estão certas — e não em bug nenhum aqui.
+#
+# SC2012  "use find em vez de ls"
+#   Os `ls` do projeto listam /usr/share/xsessions, /usr/share/wayland-sessions e
+#   os backups em ~/.local/state/kali-look-backup — caminhos que nós mesmos
+#   criamos, sem nome exótico — e um deles depende de `ls -1t` para achar o
+#   backup mais recente, ordenação que o `find` não dá sozinho.
+disable=SC2015
+disable=SC2012

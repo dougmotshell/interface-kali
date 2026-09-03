@@ -81,6 +81,9 @@ achado() {
 AGORA="$(date '+%d/%m/%Y %H:%M')"
 {
   printf '# Análise Wayland → Xorg (GNOME atual → sessão Xfce)\n\n'
+  # Acento grave aqui é marcação de código do Markdown: as aspas simples são o
+  # que impede o shell de tratá-lo como substituição de comando.
+  # shellcheck disable=SC2016
   printf 'Gerado em %s por `scripts/50-analise-wayland-xorg.sh` (somente leitura).\n\n' "$AGORA"
   printf 'Severidades: **QUEBRA** deixa de funcionar · **DEGRADA** funciona pior ·\n'
   printf '**MUDA** funciona por outro caminho, precisa reconfigurar · **MELHORA** passa a\n'
@@ -155,7 +158,7 @@ if [ -f "$MON" ]; then
   nota "escalas por monitor em monitors.xml: ${ESCALAS:-nenhuma}"
   FRAC=0; DIST=0
   for e in $ESCALAS; do case "$e" in 1|1.0) : ;; *) FRAC=1 ;; esac; done
-  if [ "$(printf '%s\n' $ESCALAS | wc -w)" -gt 1 ]; then DIST=1; fi
+  if [ "$(printf '%s\n' "$ESCALAS" | wc -w)" -gt 1 ]; then DIST=1; fi
   if [ "$FRAC" -eq 1 ] || [ "$DIST" -eq 1 ]; then
     achado DEGRADA "há escala fracionária e/ou escalas diferentes entre monitores" \
       "escalas encontradas: $ESCALAS — o Xorg aplica uma escala inteira para todas as telas" \
@@ -166,7 +169,7 @@ if [ -f "$MON" ]; then
       "—"
   fi
   RATES="$(grep -oE '<rate>[0-9.]+' "$MON" 2>/dev/null | sed 's/<rate>//' | sort -u | tr '\n' ' ' || true)"
-  if [ "$(printf '%s\n' $RATES | wc -w)" -gt 1 ]; then
+  if [ "$(printf '%s\n' "$RATES" | wc -w)" -gt 1 ]; then
     achado DEGRADA "monitores com taxas de atualização diferentes ($RATES)" \
       "no Xorg um único servidor compõe todas as telas; a menor taxa tende a limitar as demais" \
       "aceite o limite ou iguale as taxas em Configurações de tela do Xfce"
@@ -477,7 +480,7 @@ if [ -n "${LISTA// /}" ]; then
       "com GDM + libpam-gnome-keyring o daemon já sobe no login; se algo pedir senha do chaveiro, copie o .desktop para ~/.config/autostart sem a linha OnlyShowIn"
   fi
   if [ -n "${OUTROS// /}" ]; then
-    N_OUT="$(printf '%s\n' $OUTROS | wc -w)"
+    N_OUT="$(printf '%s\n' "$OUTROS" | wc -w)"
     achado MUDA "$N_OUT autostart(s) de terceiros restritos ao GNOME:${OUTROS}" \
       "têm OnlyShowIn=...GNOME... e o Xfce respeita esse campo, então não sobem" \
       "se algum for essencial, copie para ~/.config/autostart removendo a linha OnlyShowIn"
@@ -560,6 +563,9 @@ TOTAL=$((N_QUEBRA + N_DEGRADA + N_MUDA + N_MELHORA + N_OK))
   printf '| MELHORA | %s |\n' "$N_MELHORA"
   printf '| OK | %s |\n' "$N_OK"
   printf '| **total** | **%s** |\n\n' "$TOTAL"
+  # Acento grave aqui é marcação de código do Markdown: as aspas simples são o
+  # que impede o shell de tratá-lo como substituição de comando.
+  # shellcheck disable=SC2016
   printf 'Leitura recomendada: `docs/guias/13-wayland-vs-xorg.md` e `docs/guias/11-problemas-e-solucoes.md`.\n'
 } >> "$MD"
 

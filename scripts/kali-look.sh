@@ -329,6 +329,9 @@ cmd_status() {
     quem="$(prompt_concorrente "$HOME/.zshrc" || true)"
     # "aplicado" sozinho engana quando outro prompt redesenha depois.
     [ -n "$quem" ] && pstat="aplicado, mas SOBRESCRITO por: $quem"
+    local rotulos=""
+    rotulos="$(prompt_rotulos "$HOME/.zshrc" || true)"
+    [ -n "$rotulos" ] && pstat="$pstat — ($rotulos)"
   fi
   printf '  prompt no zsh : %s\n' "$pstat"
 
@@ -500,7 +503,8 @@ cmd_aplicar() {
 move_bak() {
   local alvo="$1"
   [ -e "$alvo" ] || { info "  nada em $alvo"; return 0; }
-  local dest="$alvo.bak-$(date +%Y%m%d-%H%M%S)"
+  local dest
+  dest="$alvo.bak-$(date +%Y%m%d-%H%M%S)"
   run mv "$alvo" "$dest"
   ok "movido: $alvo -> $dest"
 }
@@ -883,7 +887,12 @@ cmd_terminal() {
       [ -n "$P" ] || morre "perfil padrão do gnome-terminal não encontrado"
       G="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$P/"
       run gsettings set "$G" palette "$PALETA_KALI"
-      run gsettings set "$G" use-theme-colors true
+      # Mesmo motivo do tilix: `use-theme-colors` deixa o texto digitado e o fundo
+      # por conta do tema GTK, e o tema aqui pode não ser o do Kali. Valores de
+      # docs/referencia/kde/Kali-Dark.colorscheme: #FFFFFF sobre #23252E.
+      run gsettings set "$G" use-theme-colors false
+      run gsettings set "$G" foreground-color "'#FFFFFF'"
+      run gsettings set "$G" background-color "'#23252E'"
       run gsettings set "$G" bold-is-bright true
       run gsettings set "$G" scrollback-unlimited true
       run gsettings set "$G" use-transparent-background true
@@ -939,8 +948,12 @@ cmd_terminal() {
       tem tilix || morre "o tilix não está instalado"
       titulo "Paleta do Kali no tilix"
       local U B
+      # O perfil a configurar é o `default` do tilix. Só quando essa chave não
+      # existe é que se cai no primeiro da lista: quem tem mais de um perfil
+      # veria a paleta gravada num perfil que nunca abre.
       # `|| true`: com pipefail, o grep sem correspondência abortaria a atribuição.
-      U="$(dconf list /com/gexperts/Tilix/profiles/ 2>/dev/null | grep '/$' | head -1 | tr -d '/' || true)"
+      U="$(dconf read /com/gexperts/Tilix/profiles/default 2>/dev/null | tr -d "'" || true)"
+      [ -n "$U" ] || U="$(dconf list /com/gexperts/Tilix/profiles/ 2>/dev/null | grep '/$' | head -1 | tr -d '/' || true)"
       [ -n "$U" ] || morre "nenhum perfil do tilix encontrado — abra o tilix uma vez e repita"
       B="/com/gexperts/Tilix/profiles/$U"
       info "perfil: $U"
@@ -948,7 +961,25 @@ cmd_terminal() {
       # Mesmas 16 cores da PALETA_KALI usada no gnome-terminal.
       local PAL_TILIX="['#1F2229', '#D41919', '#5EBDAB', '#FEA44C', '#367bf0', '#9755b3', '#49AEE6', '#E6E6E6', '#198388', '#EC0101', '#47D4B9', '#FF8A18', '#277FFF', '#962ac3', '#05A1F7', '#FFFFFF']"
       run dconf write "$B/palette" "$PAL_TILIX"
-      run dconf write "$B/use-theme-colors" true
+
+      # A paleta são as 16 cores ANSI: ela pinta o que o programa colore, e NÃO o
+      # texto que você digita. Texto digitado, fundo, cursor e seleção saem do par
+      # primeiro-plano/fundo — e `use-theme-colors`, que é o que o Kali.json traz,
+      # entrega esse par ao tema GTK. No Kali dá certo porque o tema é o Kali-Dark;
+      # aqui o tema pode ser Yaru, Adwaita ou qualquer outro, e aí o comando
+      # digitado sai numa cor que não é da paleta. Então fixamos o par nos valores
+      # do próprio Kali, em vez de herdar do tema:
+      # docs/referencia/kde/Kali-Dark.colorscheme (kali-themes-common) traz
+      # Foreground=255,255,255 (#FFFFFF) e Background=35,37,46 (#23252E).
+      # O tilix grava cor em #RRRRGGGGBBBB — é a forma que ele mesmo relê.
+      run dconf write "$B/use-theme-colors" false
+      run dconf write "$B/foreground-color" "'#FFFFFFFFFFFF'"
+      run dconf write "$B/background-color" "'#232325252E2E'"
+      # Cursor, seleção e negrito ficam sem cor própria de propósito: assim o
+      # tilix os deriva do par acima (vídeo reverso), e não do tema GTK.
+      run dconf write "$B/cursor-colors-set" false
+      run dconf write "$B/highlight-colors-set" false
+      run dconf write "$B/bold-color-set" false
       # Fonte: xsettings.xml do Kali define MonospaceFontName = Fira Code Medium 10.
       # O tilix, sendo app GTK, leria a fonte mono do GNOME (outra) com system-font.
       run dconf write "$B/use-system-font" false
@@ -957,6 +988,8 @@ cmd_terminal() {
       run dconf write "$B/use-transparent-background" true
       run dconf write "$B/background-transparency-percent" 5
       ok "tilix configurado (abra uma aba nova para ver)"
+      info "Texto digitado: #FFFFFF sobre #23252E, os valores do Kali — não mais a"
+      info "cor do tema GTK que estiver ativo."
       info "Desfazer: dconf reset -f $B/"
       ;;
     auto|"")
@@ -993,6 +1026,57 @@ PROMPT_FIM='# <<< prompt kali <<<'
 # certa por `zsh -i -c`, e ainda assim a tela mostra o outro prompt — porque quem
 # desenha por último ganha. Detectar isso é a diferença entre "não funcionou" e
 # "há dois prompts disputando; escolha um".
+# O bloco, com os dois rótulos do ㉿ como parâmetro. O heredoc é literal de
+# propósito — o PROMPT do Kali é quase todo `$` e `${...}`, e escapar isso um por
+# um é exatamente onde o bloco quebraria sem ninguém notar. Por isso os rótulos
+# entram como @ESQ@/@DIR@ e são trocados depois, por `sed`.
+prompt_bloco() {
+  local esq="${1:-%n}" dir="${2:-%m}"
+  sed -e "s|@ESQ@|$esq|" -e "s|@DIR@|$dir|" <<'ZEOF'
+
+# >>> prompt kali >>>
+# Prompt de duas linhas do Kali (origem: /etc/skel/.zshrc do pacote kali-defaults)
+setopt promptsubst
+PROMPT_EOL_MARK=""
+prompt_symbol=㉿
+# Os dois lados do ㉿. Padrão do Kali: %n = usuário da sessão, %m = nome da
+# máquina. Para trocar:  kali-look.sh prompt rotulo <esquerda> <direita>
+# (e `prompt rotulo --padrao` volta ao %n㉿%m). KALI_PROMPT_USER e
+# KALI_PROMPT_HOST no ambiente ganham desta linha — dá para testar um rótulo
+# sem editar arquivo nenhum.
+prompt_user=${KALI_PROMPT_USER:-@ESQ@}
+prompt_host=${KALI_PROMPT_HOST:-@DIR@}
+PROMPT=$'%F{%(#.blue.green)}┌──${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}(%B%F{%(#.red.blue)}'$prompt_user$prompt_symbol$prompt_host$'%b%F{%(#.blue.green)})-[%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+# RPROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)'
+precmd() { print "" }
+# <<< prompt kali <<<
+ZEOF
+}
+
+# O rótulo vai para dentro do PROMPT e para dentro de um `sed`: aceitar só letra,
+# dígito, ponto, hífen e sublinhado evita tanto quebrar o `sed` quanto gravar um
+# `%` ou uma chave que o zsh leria como sequência de prompt.
+prompt_rotulo_valido() {
+  case "$1" in
+    ''|*[!A-Za-z0-9._-]*)
+      erro "rótulo inválido: \"$1\""
+      info "use letras, dígitos, ponto, hífen ou sublinhado — sem espaço e sem %"
+      return 1 ;;
+  esac
+  return 0
+}
+
+# Os rótulos gravados hoje, como "esquerda㉿direita". Vazio quando o bloco não
+# está no arquivo ou é de uma versão anterior a esta (sem as duas linhas).
+prompt_rotulos() {
+  local rc="$1" esq="" dir=""
+  [ -f "$rc" ] || return 0
+  esq="$(sed -n "/$PROMPT_INICIO/,/$PROMPT_FIM/{s/^prompt_user=.*:-\(.*\)}$/\1/p;}" "$rc" 2>/dev/null || true)"
+  dir="$(sed -n "/$PROMPT_INICIO/,/$PROMPT_FIM/{s/^prompt_host=.*:-\(.*\)}$/\1/p;}" "$rc" 2>/dev/null || true)"
+  [ -n "$esq" ] && [ -n "$dir" ] || return 0
+  printf '%s㉿%s' "$esq" "$dir"
+}
+
 prompt_concorrente() {
   local rc="$1" achados=""
   [ -f "$rc" ] || return 1
@@ -1033,6 +1117,8 @@ prompt_desativa_concorrente() {
   # ZSH_THEME="algo" -> ZSH_THEME=""  (mantém o oh-my-zsh, sem tema)
   sed -i 's/^\([[:space:]]*\)ZSH_THEME=".*"/\1ZSH_THEME=""   # zerado por kali-look: o prompt do Kali assume/' "$rc"
   # starship e p10k: comentar a linha que inicializa
+  # shellcheck disable=SC2016  # aspas simples de propósito: `\$(starship init zsh)`
+  # é padrão do sed, não comando a executar.
   sed -i 's|^\([[:space:]]*\)\(eval "\$(starship init zsh)"\)|\1# \2   # comentado por kali-look|' "$rc"
   sed -i 's|^\([[:space:]]*\)\(source.*powerlevel10k.*\)$|\1# \2   # comentado por kali-look|' "$rc"
   ok "concorrente desativado (backup em $rc.bak-<data>)"
@@ -1061,6 +1147,7 @@ prompt_avisa_concorrente() {
 
 cmd_prompt() {
   local RC="$HOME/.zshrc"
+  local ESQ="%n" DIR="%m"
   case "${1:-}" in
     exclusivo)
       titulo "Prompt do Kali como único prompt do zsh"
@@ -1074,6 +1161,14 @@ cmd_prompt() {
     aplicar)
       titulo "Prompt de duas linhas do Kali no zsh"
       [ -f "$RC" ] || morre "$RC não existe"
+      # `aplicar <esquerda> <direita>` já nasce com os rótulos escolhidos, em vez
+      # de aplicar o %n㉿%m e trocar depois.
+      if [ -n "${2:-}" ]; then
+        [ -n "${3:-}" ] || morre "uso: $0 prompt aplicar [<esquerda> <direita>]"
+        prompt_rotulo_valido "$2" || return 1
+        prompt_rotulo_valido "$3" || return 1
+        ESQ="$2"; DIR="$3"
+      fi
       if grep -q "$PROMPT_INICIO" "$RC" 2>/dev/null; then
         ok "o bloco do Kali já está no $RC"
         if prompt_avisa_concorrente "$RC"; then :; fi
@@ -1085,20 +1180,64 @@ cmd_prompt() {
       if [ "$DRY_RUN" -eq 1 ]; then
         printf '%s[dry-run]%s acrescentaria o bloco delimitado ao %s\n' "$C_DIM" "$C_RESET" "$RC"
       else
-        cat >> "$RC" <<'ZEOF'
-
-# >>> prompt kali >>>
-# Prompt de duas linhas do Kali (origem: /etc/skel/.zshrc do pacote kali-defaults)
-setopt promptsubst
-PROMPT_EOL_MARK=""
-prompt_symbol=㉿
-PROMPT=$'%F{%(#.blue.green)}┌──${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}(%B%F{%(#.red.blue)}%n'$prompt_symbol$'%m%b%F{%(#.blue.green)})-[%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)}]\n└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
-# RPROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)'
-precmd() { print "" }
-# <<< prompt kali <<<
-ZEOF
+        prompt_bloco "$ESQ" "$DIR" >> "$RC"
       fi
       ok "bloco acrescentado — abra um terminal novo para ver"
+      info "prompt: ┌──($ESQ㉿$DIR)-[~]"
+      ;;
+
+    # Trocar o que aparece dos dois lados do ㉿ sem reescrever o bloco inteiro:
+    # `%n` e `%m` são sequências do zsh (usuário e máquina), e num Ubuntu de
+    # trabalho os dois costumam ser longos e repetidos — o nome da máquina
+    # começa com o nome do usuário. O rótulo é texto literal e não muda nada
+    # fora do prompt: nem o usuário, nem o hostname da máquina.
+    rotulo)
+      titulo "Rótulos do prompt (os dois lados do ㉿)"
+      [ -f "$RC" ] || morre "$RC não existe"
+      grep -q "$PROMPT_INICIO" "$RC" 2>/dev/null \
+        || morre "o bloco do Kali não está no $RC — rode antes: $0 prompt aplicar"
+      case "${2:-}" in
+        ""|--mostrar)
+          local atual=""
+          atual="$(prompt_rotulos "$RC" || true)"
+          if [ -n "$atual" ]; then
+            info "hoje: ┌──($atual)-[~]"
+            info "trocar:  $0 prompt rotulo <esquerda> <direita>"
+          else
+            aviso "o bloco no $RC é de uma versão anterior e não tem as linhas de rótulo"
+            info "para ganhá-las:  $0 prompt rotulo <esquerda> <direita>"
+          fi
+          return 0 ;;
+        --padrao) ESQ="%n"; DIR="%m" ;;
+        *)
+          [ -n "${3:-}" ] || morre "uso: $0 prompt rotulo <esquerda> <direita> | --padrao | --mostrar"
+          prompt_rotulo_valido "$2" || return 1
+          prompt_rotulo_valido "$3" || return 1
+          ESQ="$2"; DIR="$3" ;;
+      esac
+      info "novo prompt: ┌──($ESQ㉿$DIR)-[~]"
+      confirmar "gravar esses rótulos no bloco do $RC (com backup)?" || return 1
+      run cp "$RC" "$RC.bak-$(date +%Y%m%d-%H%M%S)"
+      if [ "$DRY_RUN" -eq 1 ]; then
+        printf '%s[dry-run]%s trocaria prompt_user/prompt_host no bloco do %s\n' \
+          "$C_DIM" "$C_RESET" "$RC"
+        return 0
+      fi
+      # Bloco de versão anterior não tem as duas linhas: um `sed` acertaria zero
+      # linhas e diria "pronto" sem mudar nada. Nesse caso o bloco inteiro é
+      # trocado pelo atual, já com os rótulos.
+      if [ -z "$(sed -n "/$PROMPT_INICIO/,/$PROMPT_FIM/p" "$RC" | grep '^prompt_user=' || true)" ]; then
+        aviso "bloco sem linhas de rótulo (versão anterior): reescrevo o bloco inteiro"
+        sed -i "/$PROMPT_INICIO/,/$PROMPT_FIM/d" "$RC"
+        prompt_bloco "$ESQ" "$DIR" >> "$RC"
+      else
+        sed -i "/$PROMPT_INICIO/,/$PROMPT_FIM/{
+          s|^prompt_user=.*|prompt_user=\${KALI_PROMPT_USER:-$ESQ}|
+          s|^prompt_host=.*|prompt_host=\${KALI_PROMPT_HOST:-$DIR}|
+        }" "$RC"
+      fi
+      ok "rótulos gravados — abra um terminal novo para ver"
+      info "Aba já aberta não muda: o zsh lê o .zshrc na inicialização."
       ;;
     remover)
       titulo "Remover o prompt do Kali do zsh"
@@ -1112,7 +1251,7 @@ ZEOF
       fi
       ok "bloco removido"
       ;;
-    *) morre "uso: $0 prompt aplicar | exclusivo | remover" ;;
+    *) morre "uso: $0 prompt aplicar | rotulo | exclusivo | remover" ;;
   esac
 }
 
@@ -1201,6 +1340,11 @@ MENU
       11) cmd_prompt aplicar ;;
       x|X) cmd_prompt exclusivo ;;
       12) cmd_prompt remover ;;
+      r|R) read -r -p "  rótulo da esquerda (Enter=mostrar o atual)? " re
+           if [ -z "${re:-}" ]; then cmd_prompt rotulo; else
+             read -r -p "  rótulo da direita? " rd
+             cmd_prompt rotulo "$re" "${rd:-}"
+           fi ;;
       13) cmd_boot aplicar ;;
       14) cmd_boot reverter ;;
       15) cmd_reverter gnome ;;

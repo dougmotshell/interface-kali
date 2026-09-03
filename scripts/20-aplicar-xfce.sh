@@ -89,6 +89,9 @@ echo "  bash \"$SCRIPT_DIR/22-painel-xfce.sh\"            # painel de 34 px"
 echo "  bash \"$SCRIPT_DIR/22-painel-xfce.sh\" --compacto  # painel de 28 px"
 echo
 echo "Não carregue o perfil com 'xfce4-panel-profiles load' à mão: ele substitui"
+# O til aqui é parte do texto mostrado ao usuário — o caminho como ele o lê na
+# documentação —, não um caminho que o script vá usar.
+# shellcheck disable=SC2088
 echo "~/.config/xfce4/panel/ inteiro e desfaz ajustes feitos antes. O 22 carrega o"
 echo "perfil primeiro e só então configura o Whisker Menu e o genmon, na ordem que"
 echo "funciona."

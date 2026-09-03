@@ -70,6 +70,7 @@ do fluxo de aparência: nenhum script acima depende deles.
 
 # 4. peças opcionais
 ./kali-look.sh prompt aplicar               # prompt ┌──(user㉿host)-[~]
+./kali-look.sh prompt rotulo dev lab        # encurta os dois lados: ┌──(dev㉿lab)-[~]
 ./kali-look.sh terminal gnome               # só a paleta do terminal
 ./kali-look.sh assets --sistema             # necessário para os dois passos seguintes
 ./kali-look.sh boot aplicar                 # GRUB + Plymouth + logo do GDM (risco alto)
@@ -90,6 +91,7 @@ se parece*. Sem o segundo passo, a tela de login fica com o greeter padrão.
 ./kali-look.sh boot reverter          # remove tema de GRUB/Plymouth e logo do GDM
 ./kali-look.sh greeter reverter       # tela de login volta ao greeter padrão
 ./kali-look.sh prompt remover         # remove o bloco delimitado do ~/.zshrc
+./kali-look.sh prompt rotulo --padrao # rótulos do prompt voltam a %n㉿%m
 ./kali-look.sh remover xfce           # desinstala os pacotes do Xfce
 ./kali-look.sh remover plasma         # desinstala os pacotes do Plasma
 ./kali-look.sh remover assets --usuario

@@ -27,6 +27,9 @@ print(json.dumps({"hookSpecificOutput": {
 
 check() { printf '%s' "$command_line" | grep -Eq "$1"; }
 
+# O \$HOME faz parte do regex: casa o texto literal "$HOME" na linha de comando
+# inspecionada. As aspas simples são o que impede o shell de expandi-lo aqui.
+# shellcheck disable=SC2016
 check 'rm[[:space:]]+(-[a-zA-Z]*[rR][a-zA-Z]*[[:space:]]+)+(/|~|\$HOME|\*)' \
   && deny "Recursive delete of a root, home or glob path. Name the exact directory instead."
 check 'git[[:space:]]+push[[:space:]].*(--force([^-]|$)|-f([[:space:]]|$))' \

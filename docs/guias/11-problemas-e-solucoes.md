@@ -376,6 +376,51 @@ gsettings get org.gnome.Terminal.ProfilesList default    # o que os scripts usam
 E `use-theme-colors=true` faz o fundo/frente vir do tema — se você tinha cores
 personalizadas, elas deixam de ser aplicadas de propósito.
 
+### A paleta está certa, mas o texto que eu digito está fora dela
+
+Acontece no tilix e no gnome-terminal, e a chave é a mesma dos dois:
+`use-theme-colors`. A paleta de 16 cores pinta **o que o programa colore** — o
+`ls`, o `git`, o prompt. O texto digitado, o fundo, o cursor e a seleção saem do
+par primeiro-plano/fundo, e com `use-theme-colors=true` esse par vem do **tema
+GTK**, não da paleta. No Kali dá certo porque o tema é o `Kali-Dark`; num Ubuntu
+o tema costuma ser Yaru ou Adwaita, e aí o comando que você digita sai numa cor
+que não é do Kali:
+
+```bash
+# tilix
+U=$(dconf read /com/gexperts/Tilix/profiles/default | tr -d "'")
+dconf read /com/gexperts/Tilix/profiles/$U/use-theme-colors    # true = herda do tema
+xfconf-query -c xsettings -p /Net/ThemeName                    # tema GTK no Xfce
+gsettings get org.gnome.desktop.interface gtk-theme            # tema GTK no GNOME
+```
+
+Quando esses dois últimos discordam — e num Ubuntu que roda GNOME e Xfce eles
+discordam com frequência —, o mesmo perfil do tilix mostra uma cor em cada
+sessão. A correção é parar de herdar: fixar o par nos valores do próprio Kali
+(`#FFFFFF` sobre `#23252E`, de `docs/referencia/kde/Kali-Dark.colorscheme`), que
+é o que os scripts passaram a fazer:
+
+```bash
+scripts/kali-look.sh terminal tilix     # ou: terminal gnome
+```
+
+Detalhe e comandos avulsos em
+[`07-terminal-e-prompt.md`](07-terminal-e-prompt.md) §7.1 e §7.5.
+
+### O prompt mostra usuário e máquina longos demais
+
+Não é defeito: `%n㉿%m` é o prompt do Kali com o usuário e o hostname reais, e o
+hostname que o instalador do Ubuntu monta costuma repetir o nome do usuário e
+somar o modelo do equipamento. Para encurtar só o que aparece na tela, sem tocar
+em usuário nem em hostname:
+
+```bash
+scripts/kali-look.sh prompt rotulo dev lab     # ┌──(dev㉿lab)-[~]
+scripts/kali-look.sh prompt rotulo --padrao    # volta ao %n㉿%m
+```
+
+Ver [`07-terminal-e-prompt.md`](07-terminal-e-prompt.md) §7.6.
+
 ---
 
 ## 11.5 Instalação dos assets

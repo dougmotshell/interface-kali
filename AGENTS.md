@@ -91,6 +91,15 @@ instalar para ler ou rodar este projeto.
 - O Whisker Menu 2.8 (Ubuntu 24.04) guarda config no **xfconf**, e migra e apaga o
   `whiskermenu-<id>.rc` legado. Copiar o `.rc` não tem efeito; grave as chaves no
   xfconf, no id de plugin detectado — não crave `1`.
+- Paleta certa e **texto digitado fora dela** é `use-theme-colors` (tilix,
+  gnome-terminal) / `ColorUseTheme` (xfce4-terminal): as 16 cores ANSI pintam o
+  que o programa colore, mas primeiro plano, fundo, cursor e seleção vêm do
+  **tema GTK** quando essa chave está ligada. No Kali funciona porque o tema é o
+  Kali-Dark; aqui o tema pode ser Yaru, e no Xfce quem manda é o `xfconf`, não o
+  `gsettings`. Fixe o par (`#FFFFFF` sobre `#23252E`,
+  `docs/referencia/kde/Kali-Dark.colorscheme`) em vez de herdar.
+- O perfil que o tilix abre é o `default` do `dconf`, não o primeiro da lista:
+  `head -1` acerta o perfil errado em quem tem mais de um.
 - A paleta do terminal configura o **xfce4-terminal e mais nenhum**. Antes de culpar
   a paleta, resolva qual terminal abre: `~/.config/xfce4/helpers.rc` decide o dos
   atalhos, e a alternativa `x-terminal-emulator` (global, com `sudo`) o do "Root
