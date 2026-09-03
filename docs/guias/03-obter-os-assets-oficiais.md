@@ -28,7 +28,7 @@ usar apenas o conteúdo deles.
 | Pacote | Tamanho | O que traz | Dependências |
 |---|---|---|---|
 | `kali-themes-common` | 7 MB (~85 MB instalado) | temas GTK/xfwm/gnome-shell, ícones Flat-Remix, logos, tema do GRUB e do Plymouth, estilos de editor, perfis de painel | só `kali-wallpapers-2026` |
-| `kali-wallpapers-2026` | 6,2 MB | wallpapers e fundos de login | nenhuma |
+| `kali-wallpapers-2026` | 6,2 MB | wallpapers e fundos de login do lançamento de 2026 | nenhuma |
 | `adw-gtk3-kali` | 137 KB | `adw-gtk3` / `adw-gtk3-dark` (tema GTK3 do sabor GNOME) | nenhuma |
 | `kali-themes` | 31 KB | **apenas arquivos de configuração** (xfconf, painel, terminalrc, override de gsettings) | `kali-defaults`, `plymouth-label`, … |
 
@@ -120,7 +120,40 @@ Registre o checksum do que baixou, para saber se um `.deb` mudou entre execuçõ
 sha256sum *.deb > SHA256SUMS.txt
 ```
 
-## 3.5 As fontes vêm do Ubuntu
+## 3.5 Os outros conjuntos de wallpaper
+
+`kali-wallpapers-2026` é o conjunto do ano — é dele que sai o `kali-cubes` que a
+aparência padrão aplica. O Kali mantém **nove** conjuntos no mesmo pool, e todos
+podem conviver na mesma máquina:
+
+| Conjunto | O que é |
+|---|---|
+| `2026`, `2025`, `2024`, `2023`, `2022` | um por lançamento; ~6 a 12 MB cada |
+| `2020.4`, `2019.4` | as edições mais antigas ainda mantidas; 25 a 33 MB |
+| `legacy` | todo o histórico, do BackTrack em diante; ~126 MB |
+| `mobile-2023` | proporção de celular, para NetHunter |
+
+Dois pacotes do pool **não** têm imagem nenhuma e existem só para o APT
+resolver dependência: `kali-wallpapers-all` (metapacote, ~5 KB, declara os oito
+conjuntos de desktop) e `kali-legacy-wallpapers` (transição, ~5 KB). O
+`11-wallpapers-kali.sh` os esconde da lista por isso.
+
+```bash
+scripts/kali-look.sh wallpaper listar            # tamanho e estado de cada um
+scripts/kali-look.sh wallpaper instalar 2019.4   # baixa, extrai e copia p/ o $HOME
+scripts/kali-look.sh wallpaper galeria --html    # ver as miniaturas no navegador
+scripts/kali-look.sh wallpaper escolher          # lista numerada e aplica
+```
+
+A lista de conjuntos e a versão não estão escritas no script: são lidas do pool
+a cada execução, então o comando não envelhece quando o Kali publica
+`kali-wallpapers-2027`.
+
+As imagens vão para `~/.local/share/backgrounds/kali/` (modo A, reversível) e os
+pacotes do Plasma para `~/.local/share/wallpapers/`. Nada é instalado com
+`dpkg`, e nenhum arquivo do sistema é tocado.
+
+## 3.6 As fontes vêm do Ubuntu
 
 ```bash
 sudo apt install fonts-cantarell fonts-firacode

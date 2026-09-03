@@ -10,6 +10,7 @@ Irmãos: `AGENTS.md` (contrato) · `docs/guias/` (a documentação real).
 
 - [Pacotes de aparência do Kali](pacotes-do-kali.md) — pool, versões extraídas e os `Breaks` que decidem o que é instalável neste Ubuntu.
 - [Tela de login e as etapas](tela-de-login-e-etapas.md) — por que `instalar` não aplica, por que o greeter não lê o `$HOME`, e o `grep -q` que mente sob `pipefail`.
+- [Os conjuntos de wallpaper do Kali](wallpapers-do-kali.md) — nove conjuntos no pool, dois pacotes de ~5 KB sem imagem, e os três caminhos que cada ambiente lê.
 - [Atalhos de teclado na migração](atalhos-de-teclado-na-migracao.md) — `dconf dump` não traz os padrões do GNOME, que são os atalhos que você usa; e a ordem dos modificadores cria atalho fantasma.
 - [Teclado ABNT2 e a precedência do xfconf](teclado-e-a-precedencia-do-xfconf.md) — o canal da sessão sobrescreve o `/etc`; diagnostique na sessão e leia o mapa ativo com `xkbcomp`.
 

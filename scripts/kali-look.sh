@@ -688,6 +688,30 @@ cmd_painel() {
 # A tela de login do LightDM é a única camada de aparência que roda como o usuário
 # de sistema `lightdm`: ela não lê o seu $HOME. Por isso é etapa própria, exige os
 # assets no sistema e não é coberta por 'aplicar xfce'.
+# ============================================================== WALLPAPERS ====
+# O 10-baixar-assets.sh traz só o conjunto do ano (kali-wallpapers-2026), que é
+# o que a aparência padrão precisa. Quem não gosta do kali-cubes tem mais nove
+# conjuntos oficiais no mesmo pool — inteiros, não uma seleção nossa.
+cmd_wallpaper() {
+  local sub="${1:-listar}"
+  shift || true
+  case "$sub" in
+    listar|galeria|escolher|aplicar) ;;
+    baixar|instalar)
+      [ "$#" -ge 1 ] || morre "diga o conjunto: 2026 … 2019.4, legacy, mobile-2023 ou todos"
+      if [ "${1:-}" = "todos" ]; then
+        titulo "Todos os conjuntos de wallpaper do Kali"
+        info "São nove conjuntos; juntos passam de 240 MB, e o \`legacy\` sozinho é"
+        info "metade disso. Veja os tamanhos com:  $0 wallpaper listar"
+        confirmar "baixar todos os conjuntos agora?" || return 1
+      fi
+      ;;
+    *) morre "uso: $0 wallpaper listar | baixar | instalar | galeria | escolher | aplicar" ;;
+  esac
+  log "RUN 11-wallpapers-kali.sh $sub ${*:-} (dry-run=$DRY_RUN)"
+  DRY_RUN="$DRY_RUN" bash "$BASE_DIR/11-wallpapers-kali.sh" "$sub" "$@"
+}
+
 # ================================================================= ATALHOS ====
 # Atalhos de teclado não são aparência, mas são a parte da migração que dói na
 # rotina: o GNOME guarda os dele no dconf (org.gnome.desktop.wm.keybindings e
@@ -1138,8 +1162,11 @@ menu() {
    11) Prompt de duas linhas no zsh: aplicar
     x) Prompt do Kali como ÚNICO prompt (desativa oh-my-zsh/Starship/p10k)
    12) Prompt de duas linhas no zsh: remover
+    r) Prompt: trocar os rótulos dos dois lados do ㉿
    13) Boot e login (GRUB, Plymouth, logo do GDM) — risco alto
    14) Reverter boot e login
+    w) Wallpapers: escolher outro (lista o que está instalado e aplica)
+    W) Wallpapers: ver os nove conjuntos oficiais e baixar os que quiser
     k) Atalhos de teclado: trazer para o Xfce os que você usava no GNOME
     K) Atalhos de teclado: comparar, exportar, reverter ou ver a tabela
     g) Tela de login do LightDM: aplicar o tema do Kali  (risco alto)
@@ -1185,6 +1212,10 @@ MENU
       21) cmd_remover assets --sistema ;;
       a|A) cmd_analisar ;;
       p)  cmd_painel xfce ;;
+      w)  cmd_wallpaper escolher ;;
+      W)  cmd_wallpaper listar
+          read -r -p "  instalar qual conjunto (Enter=nenhum / ex.: 2019.4 / todos)? " t
+          [ -n "${t:-}" ] && cmd_wallpaper instalar "$t" || true ;;
       k)  cmd_atalhos migrar ;;
       K)  read -r -p "  o quê (Enter=status / exportar / reverter / mapa)? " t
           cmd_atalhos "${t:-status}" ;;
@@ -1231,12 +1262,19 @@ COMANDOS
 
   terminal xfce|tilix|gnome|plasma    paleta/fonte/transparência do terminal
   terminal auto                       detecta o terminal em uso e aplica nele
-  prompt aplicar|remover              bloco do prompt de duas linhas no ~/.zshrc
+  prompt aplicar [ESQ DIR]            bloco do prompt de duas linhas no ~/.zshrc
+  prompt remover                      remove esse bloco
+  prompt rotulo ESQ DIR|--padrao      troca o que aparece nos dois lados do ㉿
   prompt exclusivo                    aplica E desativa o prompt concorrente (oh-my-zsh,
                                       Starship, Powerlevel10k) que o sobrescreveria
   boot aplicar|reverter               GRUB + Plymouth + logo do GDM (risco alto)
   greeter aplicar|reverter|status     tela de login do LightDM (risco alto)
   painel xfce [--compacto]            painel do Kali: perfil + Whisker + genmon
+  wallpaper listar                    os nove conjuntos oficiais, tamanho e estado
+  wallpaper instalar 2019.4|todos     baixa e instala conjunto(s) no seu $HOME
+  wallpaper galeria [--html]          o que está instalado (--html abre no navegador)
+  wallpaper escolher                  lista numerada e aplica o que você escolher
+  wallpaper aplicar NOME|N|--aleatorio  troca o fundo na sessão atual
   atalhos status                      compara seus atalhos do GNOME com os do Xfce
   atalhos migrar [--modo exclusivo]   grava no xfwm4 os atalhos que você já usava
   atalhos exportar [ARQ]              salva o conjunto atual num perfil de texto
@@ -1288,6 +1326,7 @@ main() {
     greeter)     shift; cmd_greeter "$@" ;;
     painel)      shift; cmd_painel "$@" ;;
     atalhos)     shift; cmd_atalhos "$@" ;;
+    wallpaper|wallpapers) shift; cmd_wallpaper "$@" ;;
     terminal)    shift; cmd_terminal "$@" ;;
     prompt)      shift; cmd_prompt "$@" ;;
     *)           erro "comando desconhecido: $1"; echo; usage; return 1 ;;
