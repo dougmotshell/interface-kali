@@ -158,8 +158,44 @@ precmd() { print "" }
 # ---------------------------------------------------------------------------
 ```
 
-Se você usa Powerlevel10k, Starship ou outro tema de prompt, ele sobrescreve o
-`PROMPT` — escolha um dos dois. Para o visual do Kali, desative o outro tema.
+### Quando o bloco está no arquivo e o prompt não muda
+
+É o sintoma mais enganoso desta página. Um framework de prompt — **oh-my-zsh com
+um `ZSH_THEME`**, Powerlevel10k, Starship — redefine o `PROMPT` em cada `precmd`,
+ou seja, **depois** de o seu `.zshrc` ter sido lido. O bloco do Kali fica no
+arquivo, a variável até é lida certa por `zsh -i -c 'print $PROMPT'`, e a tela
+mostra o outro prompt. Quem desenha por último ganha.
+
+Como confirmar:
+
+```bash
+grep -nE '^[[:space:]]*(ZSH_THEME=|eval "\$\(starship|source.*powerlevel10k)' ~/.zshrc
+scripts/kali-look.sh status | grep 'prompt no zsh'
+#   "aplicado, mas SOBRESCRITO por: oh-my-zsh com ZSH_THEME=\"spaceship\""
+```
+
+Só um dos dois pode desenhar. Para ficar com o do Kali:
+
+```bash
+scripts/kali-look.sh prompt exclusivo   # aplica o bloco E desativa o concorrente
+```
+
+Ele mexe em **uma** linha, com backup em `~/.zshrc.bak-<data>`: `ZSH_THEME="algo"`
+vira `ZSH_THEME=""`, e as linhas de `starship`/`powerlevel10k` são comentadas.
+Plugins, aliases e o resto do oh-my-zsh continuam valendo — só o tema sai. Para
+voltar ao seu prompt, reverta a linha marcada com `por kali-look`.
+
+À mão, é o mesmo efeito:
+
+```bash
+sed -i 's/^ZSH_THEME=".*"/ZSH_THEME=""/' ~/.zshrc   # com backup antes!
+```
+
+**A escolha tem custo real.** O prompt do Kali mostra usuário, host e caminho em
+duas linhas, e nada além disso: quem vinha de um tema como o spaceship perde
+branch do git, estado da árvore, duração do comando e versões de runtime. Se
+esses dados fazem parte do seu trabalho, manter o seu tema é a decisão certa — o
+terminal segue com as cores, a fonte e a transparência do Kali de qualquer forma.
 
 Caveats:
 

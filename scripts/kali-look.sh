@@ -934,6 +934,35 @@ prompt_concorrente() {
   printf '%s' "$achados"
 }
 
+# Desativa o prompt concorrente em vez de só explicar como fazê-lo à mão. Mexe em
+# UMA linha do .zshrc, com backup, e diz qual — reverter é trocar de volta.
+prompt_desativa_concorrente() {
+  local rc="$1" quem=""
+  quem="$(prompt_concorrente "$rc" || true)"
+  if [ -z "$quem" ]; then
+    ok "nenhum prompt concorrente no $rc"
+    return 0
+  fi
+  aviso "concorrente encontrado: $quem"
+  info "Desativar troca a linha do tema por um valor vazio; plugins, aliases e o"
+  info "resto do oh-my-zsh continuam iguais."
+  confirmar "desativar o concorrente para o prompt do Kali aparecer?" || return 1
+  run cp "$rc" "$rc.bak-$(date +%Y%m%d-%H%M%S)"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    printf '%s[dry-run]%s comentaria/zeraria ZSH_THEME, starship e powerlevel10k em %s\n' \
+      "$C_DIM" "$C_RESET" "$rc"
+    return 0
+  fi
+  # ZSH_THEME="algo" -> ZSH_THEME=""  (mantém o oh-my-zsh, sem tema)
+  sed -i 's/^\([[:space:]]*\)ZSH_THEME=".*"/\1ZSH_THEME=""   # zerado por kali-look: o prompt do Kali assume/' "$rc"
+  # starship e p10k: comentar a linha que inicializa
+  sed -i 's|^\([[:space:]]*\)\(eval "\$(starship init zsh)"\)|\1# \2   # comentado por kali-look|' "$rc"
+  sed -i 's|^\([[:space:]]*\)\(source.*powerlevel10k.*\)$|\1# \2   # comentado por kali-look|' "$rc"
+  ok "concorrente desativado (backup em $rc.bak-<data>)"
+  info "Abra um terminal novo para ver. Para voltar ao seu prompt, reverta a linha"
+  info "marcada com \"por kali-look\" ou restaure o .bak."
+}
+
 prompt_avisa_concorrente() {
   local rc="$1" quem=""
   quem="$(prompt_concorrente "$rc" || true)"
@@ -949,11 +978,22 @@ prompt_avisa_concorrente() {
   info "  • Starship:  comente a linha  eval \"\$(starship init zsh)\""
   info "  • Powerlevel10k: comente o source do tema e o do ~/.p10k.zsh"
   info "Depois abra um terminal novo. Para voltar ao seu, é só reverter a linha."
+  echo
+  info "Ou deixe o script fazer isso, com backup:  $0 prompt exclusivo"
 }
 
 cmd_prompt() {
   local RC="$HOME/.zshrc"
   case "${1:-}" in
+    exclusivo)
+      titulo "Prompt do Kali como único prompt do zsh"
+      [ -f "$RC" ] || morre "$RC não existe"
+      if ! grep -q "$PROMPT_INICIO" "$RC" 2>/dev/null; then
+        info "o bloco do Kali ainda não está no $RC — aplicando primeiro"
+        cmd_prompt aplicar || return 1
+      fi
+      prompt_desativa_concorrente "$RC"
+      ;;
     aplicar)
       titulo "Prompt de duas linhas do Kali no zsh"
       [ -f "$RC" ] || morre "$RC não existe"
@@ -995,7 +1035,7 @@ ZEOF
       fi
       ok "bloco removido"
       ;;
-    *) morre "uso: $0 prompt aplicar | remover" ;;
+    *) morre "uso: $0 prompt aplicar | exclusivo | remover" ;;
   esac
 }
 
@@ -1043,6 +1083,7 @@ menu() {
   Peças isoladas
    10) Terminal: paleta do Kali (auto / xfce / tilix / gnome / plasma)
    11) Prompt de duas linhas no zsh: aplicar
+    x) Prompt do Kali como ÚNICO prompt (desativa oh-my-zsh/Starship/p10k)
    12) Prompt de duas linhas no zsh: remover
    13) Boot e login (GRUB, Plymouth, logo do GDM) — risco alto
    14) Reverter boot e login
@@ -1076,6 +1117,7 @@ MENU
       10) read -r -p "  qual terminal (Enter=auto / xfce / tilix / gnome / plasma)? " t
           cmd_terminal "${t:-auto}" ;;
       11) cmd_prompt aplicar ;;
+      x|X) cmd_prompt exclusivo ;;
       12) cmd_prompt remover ;;
       13) cmd_boot aplicar ;;
       14) cmd_boot reverter ;;
@@ -1132,6 +1174,8 @@ COMANDOS
   terminal xfce|tilix|gnome|plasma    paleta/fonte/transparência do terminal
   terminal auto                       detecta o terminal em uso e aplica nele
   prompt aplicar|remover              bloco do prompt de duas linhas no ~/.zshrc
+  prompt exclusivo                    aplica E desativa o prompt concorrente (oh-my-zsh,
+                                      Starship, Powerlevel10k) que o sobrescreveria
   boot aplicar|reverter               GRUB + Plymouth + logo do GDM (risco alto)
   greeter aplicar|reverter|status     tela de login do LightDM (risco alto)
   painel xfce [--compacto]            painel do Kali: perfil + Whisker + genmon
