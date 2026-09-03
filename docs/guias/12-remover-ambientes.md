@@ -72,7 +72,7 @@ mv ~/.config/kdeglobals ~/.config/kwinrc ~/.config/plasmarc \
 mv ~/.local/share/plasma ~/plasma-removido-$(date +%F)/ 2>/dev/null
 
 # GNOME (configuração, não pacotes) — ver 10-rollback.md §10.1
-bash ~/Desktop/interface-kali/scripts/41-reverter-gnome.sh
+bash scripts/41-reverter-gnome.sh
 ```
 
 Arquivos compartilhados entre ambientes, que podem ter sobrado do processo
@@ -151,7 +151,7 @@ de login.
 
 ### GNOME
 
-O GNOME é o desktop desta máquina — **não desinstale**. O que se remove aqui são
+O GNOME é o desktop padrão do Ubuntu — **não desinstale**. O que se remove aqui são
 apenas os extras que os guias sugeriram, se você não os quiser:
 
 ```bash
@@ -200,7 +200,7 @@ primeiro, depois este bloco.
 
 ```bash
 sudo apt remove --purge kali-themes-common kali-wallpapers-2026
-# adw-gtk3-kali normalmente não foi instalado via dpkg nesta máquina
+# adw-gtk3-kali normalmente não foi instalado via dpkg (veja o guia 03)
 # (Breaks: libgtk-4-1 << 4.16); confirme com:
 dpkg -l | grep -E 'kali-themes-common|kali-wallpapers|adw-gtk3-kali'
 sudo apt autoremove --purge
@@ -316,7 +316,7 @@ ls /usr/share/xsessions /usr/share/wayland-sessions
 # gerenciador de login correto
 cat /etc/X11/default-display-manager
 
-# configuração do GNOME de volta ao padrão desta máquina
+# configuração do GNOME de volta ao padrão do Ubuntu
 gsettings get org.gnome.desktop.interface gtk-theme    # 'Yaru-purple-dark'
 gsettings get org.gnome.desktop.interface icon-theme   # 'Yaru-purple'
 

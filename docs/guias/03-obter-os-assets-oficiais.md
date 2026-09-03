@@ -1,5 +1,10 @@
 # 3. Obter os assets oficiais do Kali
 
+> **Convenção dos comandos.** Os comandos dos guias assumem que você está na
+> **raiz do repositório clonado** — daí `cp docs/referencia/…` e
+> `bash scripts/…` funcionarem como escritos. Caminhos de sistema
+> (`/usr/share/…`, `~/.themes`, `~/.config/…`) são absolutos de propósito.
+
 ## 3.1 Regra número um: não adicione o repositório do Kali ao Ubuntu
 
 Existe a tentação de escrever `deb http://http.kali.org/kali kali-rolling main`

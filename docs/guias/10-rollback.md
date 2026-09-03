@@ -38,7 +38,7 @@ arquivo que já foi apagado.
 ## 10.1 GNOME (volta ao Yaru-purple-dark)
 
 ```bash
-bash ~/Desktop/interface-kali/scripts/41-reverter-gnome.sh
+bash scripts/41-reverter-gnome.sh
 ```
 
 Ou manualmente:

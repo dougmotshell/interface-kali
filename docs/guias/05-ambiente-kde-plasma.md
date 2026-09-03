@@ -128,7 +128,7 @@ Para rodar o mesmo ajuste aqui:
 
 ```bash
 qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript \
-  "$(cat ~/Desktop/interface-kali/docs/referencia/kde/kali-panel-customizations.js)"
+  "$(cat docs/referencia/kde/kali-panel-customizations.js)"
 ```
 
 Se o `evaluateScript` não estiver disponível, faça pela interface: clique direito
@@ -142,8 +142,8 @@ precisa de ajuste.
 
 ```bash
 mkdir -p ~/.local/share/konsole
-cp ~/Desktop/interface-kali/docs/referencia/kde/Kali-Dark.profile \
-   ~/Desktop/interface-kali/docs/referencia/kde/Kali-Dark.colorscheme \
+cp docs/referencia/kde/Kali-Dark.profile \
+   docs/referencia/kde/Kali-Dark.colorscheme \
    ~/.local/share/konsole/
 kwriteconfig5 --file konsolerc --group "Desktop Entry" --key DefaultProfile Kali-Dark.profile
 ```

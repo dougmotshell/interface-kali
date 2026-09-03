@@ -38,7 +38,7 @@ menus do sistema, visão de Atividades), via extensão `user-theme`.
 
 ```bash
 sudo apt install fonts-cantarell fonts-firacode gnome-shell-extensions gnome-tweaks
-bash ~/Desktop/interface-kali/scripts/10-baixar-assets.sh --instalar-usuario
+bash scripts/10-baixar-assets.sh --instalar-usuario
 ```
 
 O modo por usuário (`~/.themes`, `~/.local/share/icons`) basta para tudo nesta

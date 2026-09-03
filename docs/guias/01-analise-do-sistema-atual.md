@@ -1,6 +1,21 @@
-# 1. Análise do sistema atual
+# 1. A máquina de referência
 
-Levantamento feito nesta máquina em 3 de setembro de 2026.
+Todo valor deste guia foi medido em **uma** máquina, em 3 de setembro de 2026 — a
+máquina onde este material foi escrito e validado. Ela não é a sua: serve para
+você saber sob quais premissas as conclusões dos outros guias valem, e para
+comparar com o que a sua reporta.
+
+O equivalente da sua máquina sai de dois comandos, e é o primeiro passo
+recomendado:
+
+```bash
+scripts/kali-look.sh status              # aparência, assets, sessões, fontes
+scripts/50-analise-wayland-xorg.sh       # o que muda ao sair do Wayland
+```
+
+Se a sua base divergir muito do que está abaixo — outra versão de Ubuntu, outro
+desktop, outro gerenciador de login — leia o guia 09 antes de aplicar qualquer
+coisa: parte das ressalvas depende dessas premissas.
 
 ## 1.1 Sistema e sessão gráfica
 
@@ -14,7 +29,9 @@ Levantamento feito nesta máquina em 3 de setembro de 2026.
 | Sessões disponíveis | `ubuntu.desktop`, `ubuntu-xorg.desktop`, `ubuntu-wayland.desktop` |
 | Shell do usuário | `/usr/bin/zsh` (há `~/.zshrc` e `~/.bashrc` próprios) |
 | Terminal | `gnome-terminal` |
-| Disco livre em `/` | 28 GB de 231 GB (88% em uso) |
+
+Confira o seu espaço livre com `df -h /` antes de começar: o material pede ~95 MB
+de assets, mais ~400 MB se você instalar o Xfce ou ~700 MB no caso do Plasma.
 
 ## 1.2 Aparência atual
 
@@ -33,9 +50,14 @@ Nenhum tema, ícone ou wallpaper do Kali está presente — tudo será adicionad
 
 ## 1.3 Extensões do GNOME ativas
 
+Na máquina de referência (`gnome-extensions list --enabled` mostra as suas):
 `bluetooth-battery`, `emoji-copy`, `ubuntu-dock`, `dash-to-dock`,
 `Bluetooth-Battery-Meter`, `clipboard-indicator`, `ubuntu-appindicators`,
 `tiling-assistant`.
+
+A lista importa por dois motivos: extensões concorrem entre si dentro do GNOME, e
+**nenhuma delas existe** fora do GNOME Shell — o guia 13 trata do que acontece
+com cada uma numa sessão Xfce ou Plasma.
 
 Dois pontos relevantes para o ambiente GNOME:
 
@@ -106,7 +128,7 @@ Do lado KDE: `kde-plasma-desktop` 5:146 · `plasma-desktop` 4:5.27.12 ·
    contém as regras de *quick settings* — mas pode haver detalhes fora de lugar.
 5. **Espaço.** Assets do Kali ocupam ~95 MB descompactados (55 MB só o tema de
    ícones `Flat-Remix-Blue-Dark`). Com o Xfce completo, some ~400 MB; com o
-   Plasma, ~700 MB. Há 28 GB livres, mas o disco está em 88% — vale acompanhar.
+   Plasma, ~700 MB. Confira com `df -h /` antes de instalar um ambiente inteiro.
 6. **Snaps.** Aplicativos snap (ex.: Firefox no Ubuntu) não leem temas de
    `~/.themes`; ficarão fora do tema até você usar as versões `.deb`/Flatpak ou
    fazer o *bind* de tema para o snap.

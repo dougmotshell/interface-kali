@@ -56,7 +56,7 @@ Outros opcionais que o Kali recomenda e existem aqui: `catfish`,
 
 Sua sessão atual é GNOME em **Wayland** e a do Xfce é **Xorg**. Antes do primeiro
 login no Xfce, leia `13-wayland-vs-xorg.md` e rode
-`scripts/50-analise-wayland-xorg.sh`: ele lista o que desta máquina deixa de
+`scripts/50-analise-wayland-xorg.sh`: ele lista o que da sua sessão atual deixa de
 funcionar, o que muda de lugar e o que passa a funcionar melhor — inclusive as 13
 extensões do GNOME que você usa hoje, luz noturna, gestos de touchpad e captura
 de tela.
@@ -72,7 +72,7 @@ sessão Xfce; a sessão GNOME ignora):
 
 ```bash
 mkdir -p ~/.config/xfce4/xfconf/xfce-perchannel-xml
-cp ~/Desktop/interface-kali/docs/referencia/xfce-perchannel-xml/*.xml \
+cp docs/referencia/xfce-perchannel-xml/*.xml \
    ~/.config/xfce4/xfconf/xfce-perchannel-xml/
 ```
 
@@ -112,7 +112,7 @@ Duas opções.
 Kali empacota. Dentro da sessão Xfce:
 
 ```bash
-xfce4-panel-profiles load ~/Desktop/interface-kali/docs/referencia/painel/Kali.tar.bz2
+xfce4-panel-profiles load docs/referencia/painel/Kali.tar.bz2
 ```
 
 (Se instalou pelo modo B, o mesmo arquivo está em
@@ -124,7 +124,7 @@ que ele seja o padrão de fábrica do painel:
 
 ```bash
 sudo mkdir -p /etc/xdg/xfce4/panel
-sudo cp ~/Desktop/interface-kali/docs/referencia/painel/xfce4-panel-default.xml \
+sudo cp docs/referencia/painel/xfce4-panel-default.xml \
         /etc/xdg/xfce4/panel/default.xml
 ```
 
@@ -135,12 +135,12 @@ Complementos do painel:
 ```bash
 # ícone do menu + dimensões do Whisker Menu
 mkdir -p ~/.config/xfce4/panel
-cp ~/Desktop/interface-kali/docs/referencia/painel/whiskermenu-defaults.rc \
+cp docs/referencia/painel/whiskermenu-defaults.rc \
    ~/.config/xfce4/panel/whiskermenu-1.rc
 
 # script do plugin genmon que mostra o IP da VPN no painel
 mkdir -p ~/.local/share/kali-themes
-cp ~/Desktop/interface-kali/docs/referencia/painel/xfce4-panel-genmon-vpnip.sh \
+cp docs/referencia/painel/xfce4-panel-genmon-vpnip.sh \
    ~/.local/share/kali-themes/
 chmod +x ~/.local/share/kali-themes/xfce4-panel-genmon-vpnip.sh
 ```
@@ -159,7 +159,7 @@ comando do plugin (clique direito → Propriedades) para o caminho em
 
 ```bash
 mkdir -p ~/.config/xfce4/terminal
-cp ~/Desktop/interface-kali/docs/referencia/shell/xfce4-terminalrc \
+cp docs/referencia/shell/xfce4-terminalrc \
    ~/.config/xfce4/terminal/terminalrc
 ```
 

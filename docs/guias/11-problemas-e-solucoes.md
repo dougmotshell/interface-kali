@@ -171,7 +171,7 @@ Ubuntu — `01-analise-do-sistema-atual.md` §1.5).
 
 **Causa.** O `Flat-Remix-Blue-Dark` declara
 `Inherits=breeze-dark,elementary,Adwaita,gnome,hicolor`, e **`breeze-dark` e
-`elementary` não existem neste Ubuntu** — confirmado nesta máquina. O Kali
+`elementary` não existem neste Ubuntu** — confirmado na máquina de referência. O Kali
 resolve isso porque instala o `breeze-dark` junto. Quando um ícone não está no
 Flat-Remix, a cadeia cai direto no `Adwaita`, e alguns aplicativos acabam sem
 ícone próprio.
@@ -379,7 +379,7 @@ e mais seguro do que consertar peça por peça.
 | Editei o GRUB e nada mudou | falta aplicar | `sudo update-grub` (guarde antes: `sudo cp /boot/grub/grub.cfg /boot/grub/grub.cfg.bak`) |
 | O Plymouth continua o do Ubuntu | falta aplicar no initramfs | `sudo update-initramfs -u` depois de trocar a alternativa |
 | O texto do Plymouth do Kali não aparece | o tema usa o módulo `label` | `sudo apt install plymouth-label` |
-| `update-alternatives --config default.plymouth` diz que só há uma opção | nesta máquina existe apenas `bgrt` registrado (confirmado) | instale `plymouth-themes` e/ou registre o tema do Kali com `--install`, como em `08-boot-login-e-logos.md` §8.5 |
+| `update-alternatives --config default.plymouth` diz que só há uma opção | na máquina de referência havia apenas `bgrt` registrado | instale `plymouth-themes` e/ou registre o tema do Kali com `--install`, como em `08-boot-login-e-logos.md` §8.5 |
 | O logo do Kali não aparece no GDM | o `dconf` do GDM não foi atualizado | `sudo dconf update` e reinicie o GDM |
 | O fundo do GDM continua o do Ubuntu | está compilado dentro de `gnome-shell-theme.gresource` | comportamento esperado; §8.3 explica por que não vale mexer |
 
@@ -446,7 +446,7 @@ está: `echo $XDG_CURRENT_DESKTOP`.
 
 Sua sessão de hoje é GNOME em Wayland; Xfce e "Plasma (X11)" são Xorg. Os
 sintomas abaixo aparecem no primeiro dia na sessão nova e **não** são defeito de
-tema. O mapa completo, item por item desta máquina, está em
+tema. O mapa completo, item por item, está em
 [`13-wayland-vs-xorg.md`](13-wayland-vs-xorg.md).
 
 | Sintoma | Causa | Solução |
@@ -454,7 +454,7 @@ tema. O mapa completo, item por item desta máquina, está em
 | Compartilhamento de tela no Slack/Teams/Meet abre a lista vazia ou não mostra janelas | dono da captura mudou; no Xorg o app captura direto, mas o app pode ter cacheado a escolha do portal | feche e reabra o app na sessão nova; escolha "Tela inteira" uma vez. Se persistir, confirme que `xdg-desktop-portal-gtk` está rodando: `systemctl --user status xdg-desktop-portal-gtk` |
 | O diálogo de senha nunca aparece e a ação simplesmente não acontece (discos, GParted, atualização) | não há agente gráfico do polkit na sessão Xfce | `sudo apt install mate-polkit` e faça logout/login. Verifique se está no ar: `pgrep -af polkit-mate-authentication-agent` |
 | O chaveiro pede senha a cada boot (Chrome, Brave, Slack, Bitwarden esquecem senhas) | o destravamento por PAM não está no gerenciador de login em uso — acontece se você trocou o GDM pelo LightDM | `grep -r pam_gnome_keyring /etc/pam.d/lightdm*`; se não houver linha, mantenha o GDM (guia 08 §8.4) ou adicione as linhas `auth optional pam_gnome_keyring.so` / `session optional pam_gnome_keyring.so auto_start` |
-| Atalhos de teclado que eu usava sumiram | atalhos do GNOME não migram para o Xfce | *Configurações do Xfce → Teclado → Atalhos de aplicativo*. O Kali traz o seu conjunto em `xfce4-keyboard-shortcuts.xml`; nesta máquina não havia atalhos personalizados a perder |
+| Atalhos de teclado que eu usava sumiram | atalhos do GNOME não migram para o Xfce | *Configurações do Xfce → Teclado → Atalhos de aplicativo*. O Kali traz o seu conjunto em `xfce4-keyboard-shortcuts.xml`; confira os seus antes de trocar de sessão (guia 13 §13.4) |
 | Gestos de touchpad de 3/4 dedos pararam | o Mutter tem gestos nativos, o Xorg não | `touchegg` ou `libinput-gestures` — confirme com `apt-cache policy touchegg libinput-gestures` |
 | A luz noturna (tela mais quente à noite) desapareceu | é um recurso do GNOME; o Xfce não tem | `redshift-gtk`, `gammastep` ou `xsct` |
 | No OBS, a fonte de captura de tela aparece vazia ou preta | fontes PipeWire (do Wayland) não funcionam no Xorg | crie uma fonte nova: *Captura de tela (XSHM)* ou *Captura de janela (Xcomposite)*. As fontes antigas não se convertem |

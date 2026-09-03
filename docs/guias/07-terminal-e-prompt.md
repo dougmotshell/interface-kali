@@ -24,7 +24,7 @@ Mais: transparência de 5% (`BackgroundDarkness=0.95`), negrito em cor clara
 
 ```bash
 mkdir -p ~/.config/xfce4/terminal
-cp ~/Desktop/interface-kali/docs/referencia/shell/xfce4-terminalrc \
+cp docs/referencia/shell/xfce4-terminalrc \
    ~/.config/xfce4/terminal/terminalrc
 ```
 
@@ -52,7 +52,7 @@ gsettings set org.gnome.Terminal.Legacy.Settings confirm-close false
 
 ```bash
 mkdir -p ~/.local/share/konsole
-cp ~/Desktop/interface-kali/docs/referencia/kde/Kali-Dark.{profile,colorscheme} \
+cp docs/referencia/kde/Kali-Dark.{profile,colorscheme} \
    ~/.local/share/konsole/
 kwriteconfig5 --file konsolerc --group "Desktop Entry" --key DefaultProfile Kali-Dark.profile
 ```
@@ -70,7 +70,7 @@ O prompt é do `~/.zshrc` do Kali (`/etc/skel/.zshrc`, copiado em
 `docs/referencia/shell/kali-zshrc`):
 
 ```
-┌──(douglas-silva㉿kali)-[~/algum/caminho]
+┌──(usuario㉿kali)-[~/algum/caminho]
 └─$
 ```
 

@@ -22,18 +22,18 @@ reais extraídos dos pacotes oficiais do Kali:
   cores do terminal;
 - as fontes Cantarell e Fira Code;
 - o prompt de duas linhas com `㉿`;
-- para a imagem "antes", as configurações lidas desta máquina (Yaru-purple-dark,
-  dock embaixo) e os ícones Yaru instalados aqui.
+- para a imagem "antes", as configurações lidas da máquina de referência do guia
+  01 (Yaru-purple-dark, dock embaixo) e os ícones Yaru do próprio Ubuntu.
 
 O que elas mostram fielmente: paleta, tipografia, ícones, wallpaper, disposição
 do painel/barra/dock e densidade da interface. O que elas **não** garantem:
 sombras, cantos arredondados, animações e o pixel exato de cada widget — isso só
-aparece na máquina depois de aplicar.
+aparece na sua máquina depois de aplicar.
 
 Os fontes HTML estão em `html/`. Para regerar após editar:
 
 ```bash
-cd ~/Desktop/interface-kali/docs/capturas
+cd docs/capturas
 for f in 1-antes-ubuntu-gnome 2-depois-xfce-kali 3-depois-plasma-kali 4-depois-gnome-kali; do
   google-chrome --headless=new --disable-gpu --hide-scrollbars \
     --window-size=1600,900 --screenshot="$PWD/$f.png" "file://$PWD/html/$f.html"
@@ -50,15 +50,22 @@ interface:
 - tecle **Print** para abrir o utilitário de captura do GNOME (tela inteira,
   janela ou área) — o arquivo vai para `~/Imagens/Capturas de tela/`;
 - ou instale um utilitário: `sudo apt install gnome-screenshot` e depois
-  `gnome-screenshot -f ~/Desktop/interface-kali/docs/capturas/antes-real.png`.
+  `gnome-screenshot -f docs/capturas/antes-real.png`.
 
 Na sessão Xfce (Xorg), o `xfce4-screenshooter` funciona por linha de comando:
 
 ```bash
-xfce4-screenshooter -f -s ~/Desktop/interface-kali/docs/capturas/depois-real.png
+xfce4-screenshooter -f -s docs/capturas/depois-real.png
 ```
 
 E no Plasma, `spectacle -f -b -o arquivo.png`.
+
+## Licenças dos assets
+
+O wallpaper, o logo do dragão, os ícones Flat-Remix e Yaru e as duas fontes vêm
+de terceiros e mantêm as licenças de origem (GPL-3.0+, CC-BY-SA-4.0 e OFL 1.1).
+A relação completa, arquivo por arquivo, está em
+[`CREDITOS.md`](CREDITOS.md) — leia antes de redistribuir estas imagens.
 
 ## Referência visual oficial
 

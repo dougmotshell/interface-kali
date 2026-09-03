@@ -12,6 +12,31 @@ Fora de `docs/`: [`../scripts/`](../scripts/) (automação, com `kali-look.sh` c
 ponto de entrada), `../relatorios/` (saída do analisador Wayland → Xorg) e
 [`../README.md`](../README.md) (índice geral do projeto).
 
+## Para quem clonou este repositório
+
+Este material foi escrito e validado em **uma** máquina — a "máquina de
+referência" descrita no guia 01. Ele é reprodutível, mas os números de lá são
+dela, não da sua.
+
+**Pré-requisitos:** Ubuntu 24.04 LTS ou Debian equivalente. Os guias foram
+validados com GNOME 46 (Wayland, GDM), Xfce 4.18 e KDE Plasma 5.27 — as versões
+que o Ubuntu 24.04 entrega. Em distribuição com Plasma 6 ou GNOME 48+, parte das
+ressalvas dos guias 05 e 06 deixa de valer (para melhor).
+
+**Primeiro comando, antes de qualquer leitura longa:**
+
+```bash
+./scripts/kali-look.sh status
+```
+
+Ele reporta o que a **sua** máquina tem: tema e fontes em uso, se os assets do
+Kali estão instalados, quais sessões existem na tela de login, extensões
+relevantes e espaço livre. Em seguida, `./scripts/50-analise-wayland-xorg.sh`
+diz o que muda se você trocar Wayland por Xorg.
+
+Os comandos dos guias assumem que você está na raiz do repositório clonado.
+Nada aqui exige que o repositório fique em um caminho específico.
+
 ## Os 13 guias
 
 | Guia | Conteúdo |

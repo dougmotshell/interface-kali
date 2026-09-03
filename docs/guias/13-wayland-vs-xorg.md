@@ -11,8 +11,17 @@ integração: recursos que hoje vêm do GNOME Shell (extensões, luz noturna,
 gestos, captura) não existem no Xfce, e precisam de substituto ou deixam de
 existir.
 
-Este guia lista, item por item **desta máquina**, o que acontece. A checagem
-automatizada está em `scripts/50-analise-wayland-xorg.sh`.
+Este guia lista, item por item, o que acontece. A tabela abaixo foi levantada na
+**máquina de referência** do guia 01 (Ubuntu 24.04, GNOME 46 em Wayland, GDM) —
+use-a como mapa, e rode a checagem na sua própria máquina antes de trocar de
+sessão:
+
+```bash
+scripts/50-analise-wayland-xorg.sh
+```
+
+Ele classifica cada achado nas mesmas severidades usadas aqui e grava um
+relatório em `relatorios/`.
 
 ## 13.1 O que muda por baixo
 
@@ -32,7 +41,7 @@ GNOME Shell**. Fora dele não existe — não há "porta" de extensão para o Xf
 Cada uma das suas 13 extensões ativas precisa de um substituto nativo, ou o
 recurso desaparece.
 
-## 13.2 Inventário desta máquina
+## 13.2 Inventário da máquina de referência
 
 Severidades: `QUEBRA` (o recurso deixa de existir) · `DEGRADA` (existe pior ou
 exige software extra) · `MUDA` (existe, mas em outro lugar/formato) · `MELHORA` ·
@@ -53,7 +62,7 @@ exige software extra) · `MUDA` (existe, mas em outro lugar/formato) · `MELHORA
 | `burn-my-windows` | QUEBRA | animações de abrir/fechar | `xfwm4` só tem compositor simples (sombra, transparência). No **Plasma**, o KWin tem efeitos nativos equivalentes |
 | `compiz-windows-effect` | QUEBRA | janelas "gelatinosas" | no Plasma existe o efeito nativo *Wobbly Windows*; no Xfce, não há |
 | `compiz-alike-magic-lamp-effect` | QUEBRA | minimizar em "lâmpada" | no Plasma existe *Magic Lamp*; no Xfce, não há |
-| `Battery-Health-Charging` | QUEBRA | limite de carga da bateria | o kernel expõe `/sys/class/power_supply/BAT0/charge_control_end_threshold` (existe nesta máquina, hoje em `100`). Sem interface gráfica: escreva o valor como root (não persiste no boot) ou use `tlp` com `STOP_CHARGE_THRESH_BAT0` |
+| `Battery-Health-Charging` | QUEBRA | limite de carga da bateria | o kernel expõe `/sys/class/power_supply/BAT0/charge_control_end_threshold` (existia na máquina de referência, em `100`). Sem interface gráfica: escreva o valor como root (não persiste no boot) ou use `tlp` com `STOP_CHARGE_THRESH_BAT0` |
 | `ding` | MUDA | ícones na área de trabalho | `xfdesktop` faz isso nativamente, e o `xfce4-desktop.xml` do Kali já configura (48 px, Home/sistema/removíveis/lixeira) |
 
 Nada disso precisa ser desinstalado: as extensões continuam válidas e voltam a
@@ -64,32 +73,32 @@ funcionar quando você entrar na sessão GNOME.
 | Item | Sev. | O que acontece | O que fazer |
 |---|---|---|---|
 | Agente gráfico do polkit | QUEBRA | sem agente, o diálogo de senha **nunca aparece** e a ação falha calada (GParted, gnome-disks, atualizações) | instale `mate-polkit` (é o que o `kali-desktop-xfce` recomenda) ou `policykit-1-gnome`; ambos autostartam via `/etc/xdg/autostart` |
-| Chaveiro (`gnome-keyring`) | OK com GDM | senhas de Chrome/Brave/Slack/Bitwarden vêm do chaveiro; o GDM destrava por PAM (`libpam-gnome-keyring` instalado) e isso vale também para a sessão Xfce | nada. Se você trocar o gerenciador de login para o LightDM (guia 08), confirme com `grep -r pam_gnome_keyring /etc/pam.d/lightdm*` — sem isso o chaveiro passa a pedir senha a cada boot |
+| Chaveiro (`gnome-keyring`) | OK com GDM | senhas de navegadores e apps de mensagem vêm do chaveiro; o GDM destrava por PAM (`libpam-gnome-keyring` instalado) e isso vale também para a sessão Xfce | nada. Se você trocar o gerenciador de login para o LightDM (guia 08), confirme com `grep -r pam_gnome_keyring /etc/pam.d/lightdm*` — sem isso o chaveiro passa a pedir senha a cada boot |
 | Montagem automática de pendrive | MUDA | quem monta no GNOME é o `gvfs` + Nautilus | `thunar-volman` + `gvfs-backends` + `gvfs-fuse` |
 | Notificações | MUDA | dono é o GNOME Shell | `xfce4-notifyd` (0.9.4) |
 | Bloqueio de tela | MUDA | dono é o GNOME Shell | `xfce4-screensaver`, já configurado pelo `xfce4-screensaver.xml` do Kali |
 | Applet de rede | MUDA | ícone é da barra do GNOME | `network-manager-gnome` (binário `nm-applet`) no autostart do Xfce |
-| FortiClient na bandeja | MUDA | hoje aparece via `appindicators` | depende do plugin `systray` com StatusNotifier ativo (ver acima) |
+| Cliente de VPN na bandeja (ex.: FortiClient) | MUDA | hoje aparece via `appindicators` | depende do plugin `systray` com StatusNotifier ativo (ver acima) |
 | Teclas de brilho/mídia | MUDA | `gnome-settings-daemon` | `xfce4-power-manager` + `xfce4-settings` (atalhos do Kali já incluídos) |
 | Gestos de touchpad (3/4 dedos) | DEGRADA | o Mutter tem gestos nativos; o Xorg não | `touchegg` ou `libinput-gestures` — confirme com `apt-cache policy touchegg libinput-gestures` |
 | Rolagem natural / touchpad | MUDA | hoje `natural-scroll=true` no GNOME | reconfigure em *Configurações do Xfce → Mouse e touchpad*; a chave do GNOME não é lida |
 | Luz noturna | DEGRADA | está **ligada** hoje (`night-light-enabled=true`) e o Xfce não tem equivalente | `redshift`/`redshift-gtk` (1.12), `gammastep` (2.0.9) ou `xsct` (2.2) — todos disponíveis |
-| Atalhos personalizados | MUDA | atalhos do GNOME não migram | nesta máquina não há atalhos personalizados (`custom-keybindings` está vazio) e a única alteração de atalho padrão é `maximize` desvinculado — ou seja, quase nada a migrar. O Kali traz o seu `xfce4-keyboard-shortcuts.xml` |
-| Escala de tela | OK aqui | `monitors.xml` mostra `scale 1` em HDMI-1 e eDP-1, `text-scaling-factor 1.0` e `experimental-features` vazio — nenhuma escala fracionária em uso, logo nada a perder | nada. **Importa saber**: se um dia precisar de 125%/150%, o Xorg só faz escala inteira e global; com dois monitores de densidade diferente, o Wayland é melhor |
+| Atalhos personalizados | MUDA | atalhos do GNOME não migram | na máquina de referência não havia atalhos personalizados (`custom-keybindings` vazio) e a única alteração era `maximize` desvinculado — confira os seus com o analisador antes de assumir o mesmo. O Kali traz o seu `xfce4-keyboard-shortcuts.xml` |
+| Escala de tela | OK aqui | na máquina de referência, `monitors.xml` mostra `scale 1` nos dois monitores, `text-scaling-factor 1.0` e `experimental-features` vazio — nenhuma escala fracionária em uso, logo nada a perder | nada. **Importa saber**: se um dia precisar de 125%/150%, o Xorg só faz escala inteira e global; com dois monitores de densidade diferente, o Wayland é melhor |
 | Layout de monitores | MUDA | `~/.config/monitors.xml` é do GNOME e o Xfce **não lê** | reconfigure em *Configurações do Xfce → Exibição* (grava em `xfconf`, canal `displays`); `arandr` ajuda a montar o layout |
 
 ### Aplicativos instalados
 
 | App | Sev. | Observação |
 |---|---|---|
-| VS Code, Brave, Chrome, Edge, Slack, Bitwarden, DBeaver (Electron/Chromium) | OK | verifiquei: não há nenhum `~/.config/*-flags.conf` nem `.desktop` com `--ozone-platform=wayland`. Sem flag forçando Wayland, todos usam X11 nativamente no Xfce |
-| Compartilhamento de tela (Slack, Teams, Meet, Zoom) | MELHORA | no Wayland depende do portal e às vezes não lista janelas; no Xorg o app enxerga as janelas direto |
-| OBS Studio | MUDA | nas suas cenas atuais só há fontes de **áudio** (`alsa_input_capture`, `pulse_input_capture`, `pulse_output_capture`) — não há captura de vídeo a converter. Ao criar uma no Xorg, use *Captura de tela (XSHM)* ou *Captura de janela (Xcomposite)*; fontes PipeWire são recriadas, não convertidas |
+| Apps Electron/Chromium (editores de código, navegadores baseados em Chromium, mensageiros, clientes de banco de dados) | OK | desde que não haja `~/.config/*-flags.conf` nem `.desktop` com `--ozone-platform=wayland`, todos usam X11 nativamente no Xfce. Na máquina de referência não havia nenhuma flag dessas — **confirme na sua** com o item 3 do analisador |
+| Compartilhamento de tela (apps de reunião e mensageiros) | MELHORA | no Wayland depende do portal e às vezes não lista janelas; no Xorg o app enxerga as janelas direto |
+| OBS Studio | MUDA | na máquina de referência as cenas só tinham fontes de **áudio** (`alsa_input_capture`, `pulse_input_capture`, `pulse_output_capture`), nada de vídeo a converter — o analisador diz o que há nas suas. Ao criar uma no Xorg, use *Captura de tela (XSHM)* ou *Captura de janela (Xcomposite)*; fontes PipeWire são recriadas, não convertidas |
 | Peek (gravador de tela) | MELHORA | é X11-only: hoje não funciona em Wayland, no Xfce volta a funcionar |
 | `scrot`, `xclip`, `xrandr`, `xprop`, `xkill` | MELHORA | ferramentas X11 já instaladas que passam a funcionar de verdade |
 | `grim` | QUEBRA | é Wayland-only e **hoje já não funciona** aqui (o Mutter não implementa `wlr-screencopy`); no Xorg não serve para nada |
 | Captura de tela | MUDA | `xfce4-screenshooter` assume, e o Kali já mapeia a tecla `Print` para ele |
-| Snaps (firefox, libreoffice, postman, jdownloader2) | OK | abrem normalmente; continuam **sem** o tema (limitação já descrita no guia 09) |
+| Snaps (navegador, suíte de escritório, utilitários) | OK | abrem normalmente; continuam **sem** o tema (limitação já descrita no guia 09) |
 | JDownloader (Java/Swing) | MELHORA | apps Java antigos costumam ir melhor em X11 que em XWayland |
 | GIMP, VLC | OK | nenhum requisito de Wayland |
 | Firefox (snap) | OK | usa X11 por padrão fora do GNOME; se você tinha `MOZ_ENABLE_WAYLAND` em algum lugar, não tem — verifiquei os arquivos de ambiente e não há nenhuma variável Wayland definida |
@@ -111,7 +120,7 @@ funcionar quando você entrar na sessão GNOME.
 ## 13.4 Antes de trocar: o que salvar
 
 ```bash
-# atalhos (nesta máquina estão vazios/quase padrão, mas custa nada)
+# atalhos personalizados do GNOME (salve antes: não migram para o Xfce)
 dconf dump /org/gnome/settings-daemon/plugins/media-keys/ > ~/atalhos-gnome.ini
 dconf dump /org/gnome/desktop/wm/keybindings/            > ~/atalhos-wm-gnome.ini
 
@@ -128,7 +137,7 @@ primeiros itens — estes comandos só deixam o recorte à mão.
 ## 13.5 Verificação automatizada
 
 ```bash
-cd ~/Desktop/interface-kali/scripts
+cd scripts
 ./50-analise-wayland-xorg.sh
 ```
 
