@@ -3,6 +3,7 @@
 # Uso: bash 00-backup.sh
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DEST="$HOME/.local/state/kali-look-backup/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$DEST"
 echo "Backup em: $DEST"
@@ -38,6 +39,14 @@ for p in /etc/default/grub /etc/default/grub.d /etc/lightdm \
          /etc/dconf/db/gdm.d /etc/X11/default-display-manager; do
   [ -e "$p" ] && cp -a "$p" "$DEST/sistema/" 2>/dev/null || true
 done
+
+# atalhos de teclado, em texto legível. O dconf dump acima só traz o que desviou
+# do padrão, e a maioria dos atalhos que a pessoa usa SÃO os padrões do GNOME —
+# eles não estariam em lugar nenhum sem isto.
+if [ -x "$SCRIPT_DIR/23-atalhos-teclado.sh" ]; then
+  bash "$SCRIPT_DIR/23-atalhos-teclado.sh" exportar "$DEST/atalhos.perfil" \
+    >/dev/null 2>&1 || echo "(não foi possível exportar os atalhos)"
+fi
 
 # inventário
 dpkg -l | awk '/^ii/{print $2, $3}' > "$DEST/pacotes.txt"

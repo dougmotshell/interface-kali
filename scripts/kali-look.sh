@@ -432,6 +432,12 @@ proximo_passo_aplicar() {
   echo
   info "Motivo: a aparência é gravada no serviço de configuração da própria sessão"
   info "(xfconf no Xfce, kconfig no Plasma). De fora, o comando é recusado."
+  if [ "$alvo" = "xfce" ]; then
+    echo
+    info "Seus atalhos de teclado NÃO vêm junto: o GNOME os guarda no dconf e o"
+    info "Xfce no xfconf. Mas o dconf é do usuário, não da sessão — então não há"
+    info "nada para salvar antes de sair. Já dentro do $alvo: $0 atalhos migrar"
+  fi
   if [ "$alvo" = "xfce" ] && tem lightdm; then
     info "Depois, para a tela de login: $0 greeter aplicar"
   fi
@@ -470,6 +476,7 @@ cmd_aplicar() {
       run bash "$BASE_DIR/20-aplicar-xfce.sh"
       echo
       info "Próximo passo — o painel, que é etapa separada:  $0 painel xfce"
+      atalhos_oferta
       ;;
     plasma)
       exige_assets || return 1
@@ -681,6 +688,52 @@ cmd_painel() {
 # A tela de login do LightDM é a única camada de aparência que roda como o usuário
 # de sistema `lightdm`: ela não lê o seu $HOME. Por isso é etapa própria, exige os
 # assets no sistema e não é coberta por 'aplicar xfce'.
+# ================================================================= ATALHOS ====
+# Atalhos de teclado não são aparência, mas são a parte da migração que dói na
+# rotina: o GNOME guarda os dele no dconf (org.gnome.desktop.wm.keybindings e
+# vizinhos) e o Xfce no canal xfconf xfce4-keyboard-shortcuts, com outros nomes
+# de ação. Trocar de ambiente não leva nenhum. Detalhe em 23-atalhos-teclado.sh.
+cmd_atalhos() {
+  local sub="${1:-status}"
+  shift || true
+  case "$sub" in
+    status|mapa|exportar) ;;
+    reverter)
+      titulo "Voltar o conjunto de atalhos do backup"
+      confirmar "restaurar o canal xfce4-keyboard-shortcuts do último backup?" || return 1
+      ;;
+    migrar)
+      titulo "Trazer para o xfwm4 os atalhos que você usava no GNOME"
+      info "O dconf é do usuário, não da sessão: mesmo já dentro do Xfce ainda se lê"
+      info "o que o GNOME usava — inclusive os padrões, que não aparecem no dump."
+      info "Veja antes o que muda:  $0 atalhos status"
+      confirmar "gravar esses atalhos no xfwm4 (backup do canal é feito antes)?" || return 1
+      ;;
+    *) morre "uso: $0 atalhos status | migrar | exportar | reverter | mapa" ;;
+  esac
+  log "RUN 23-atalhos-teclado.sh $sub ${*:-} (dry-run=$DRY_RUN)"
+  DRY_RUN="$DRY_RUN" bash "$BASE_DIR/23-atalhos-teclado.sh" "$sub" "$@"
+}
+
+# Oferece a migração de atalhos no único momento em que a pessoa está dentro da
+# sessão nova e com o assunto na cabeça: logo depois de aplicar a aparência.
+atalhos_oferta() {
+  tem xfconf-query || return 0
+  tem gsettings   || return 0
+  local pendentes
+  pendentes="$(bash "$BASE_DIR/23-atalhos-teclado.sh" status 2>/dev/null \
+    | grep -c -e 'não existe no Xfce' -e '(hoje:' || true)"
+  case "${pendentes:-0}" in ''|0) return 0 ;; esac
+  echo
+  aviso "$pendentes atalho(s) de teclado seus não batem com o conjunto do Kali"
+  info "Atalho não é aparência: ele fica no dconf do GNOME e não vem na troca."
+  if confirmar "trazer seus atalhos do GNOME para o xfwm4 agora?"; then
+    DRY_RUN="$DRY_RUN" bash "$BASE_DIR/23-atalhos-teclado.sh" migrar
+  else
+    info "Depois, quando quiser:  $0 atalhos status  e  $0 atalhos migrar"
+  fi
+}
+
 cmd_greeter() {
   local acao="${1:-}"
   case "$acao" in
@@ -1087,6 +1140,8 @@ menu() {
    12) Prompt de duas linhas no zsh: remover
    13) Boot e login (GRUB, Plymouth, logo do GDM) — risco alto
    14) Reverter boot e login
+    k) Atalhos de teclado: trazer para o Xfce os que você usava no GNOME
+    K) Atalhos de teclado: comparar, exportar, reverter ou ver a tabela
     g) Tela de login do LightDM: aplicar o tema do Kali  (risco alto)
     G) Tela de login do LightDM: reverter ao padrão
 
@@ -1130,6 +1185,9 @@ MENU
       21) cmd_remover assets --sistema ;;
       a|A) cmd_analisar ;;
       p)  cmd_painel xfce ;;
+      k)  cmd_atalhos migrar ;;
+      K)  read -r -p "  o quê (Enter=status / exportar / reverter / mapa)? " t
+          cmd_atalhos "${t:-status}" ;;
       g)  cmd_greeter aplicar ;;
       G)  cmd_greeter reverter ;;
       d)  DRY_RUN=$((1 - DRY_RUN)); info "dry-run agora: $DRY_RUN" ;;
@@ -1179,6 +1237,11 @@ COMANDOS
   boot aplicar|reverter               GRUB + Plymouth + logo do GDM (risco alto)
   greeter aplicar|reverter|status     tela de login do LightDM (risco alto)
   painel xfce [--compacto]            painel do Kali: perfil + Whisker + genmon
+  atalhos status                      compara seus atalhos do GNOME com os do Xfce
+  atalhos migrar [--modo exclusivo]   grava no xfwm4 os atalhos que você já usava
+  atalhos exportar [ARQ]              salva o conjunto atual num perfil de texto
+  atalhos reverter [ARQ.xml]          volta o canal de atalhos do último backup
+  atalhos mapa                        a tabela de tradução GNOME → xfwm4
 
 EXEMPLOS
   $0 status
@@ -1224,6 +1287,7 @@ main() {
     boot)        shift; cmd_boot "$@" ;;
     greeter)     shift; cmd_greeter "$@" ;;
     painel)      shift; cmd_painel "$@" ;;
+    atalhos)     shift; cmd_atalhos "$@" ;;
     terminal)    shift; cmd_terminal "$@" ;;
     prompt)      shift; cmd_prompt "$@" ;;
     *)           erro "comando desconhecido: $1"; echo; usage; return 1 ;;

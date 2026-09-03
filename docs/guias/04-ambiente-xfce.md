@@ -217,7 +217,56 @@ Se for por esse caminho, note que são **dois** passos: instalar o LightDM troca
 qual programa desenha a tela de login, e `scripts/kali-look.sh greeter aplicar`
 troca a aparência dela. Só o primeiro deixa a tela com o greeter padrão.
 
-## 4.7 Atalho: script
+## 4.7 Os seus atalhos de teclado não vêm junto
+
+Trocar de ambiente não leva atalho nenhum, e isso não é defeito de configuração:
+são dois bancos de dados diferentes, com nomes de ação diferentes.
+
+| | GNOME | Xfce |
+|---|---|---|
+| Onde mora | `dconf` (`org.gnome.desktop.wm.keybindings`, `org.gnome.mutter.keybindings`, `org.gnome.shell.keybindings`, `…media-keys`) | canal `xfconf` `xfce4-keyboard-shortcuts` |
+| Como se chama fechar a janela | `close` | `close_window_key` |
+| Quem executa | GNOME Shell + `gnome-settings-daemon` | `xfwm4` + `xfce4-settings` |
+
+Dois detalhes que mudam o resultado:
+
+1. **A maior parte dos "seus" atalhos são os padrões do GNOME**, e padrão não
+   aparece em `dconf dump` — o dump só traz o que desviou. Quem tenta migrar
+   lendo o dump migra quase nada. A leitura tem de ser com `gsettings`, que
+   devolve o valor efetivo.
+2. **O `dconf` é do usuário, não da sessão.** Já dentro do Xfce ainda se lê o que
+   o GNOME usava. Não há nada para salvar antes de sair da sessão antiga, e a
+   migração pode ser feita depois, com calma.
+
+O `scripts/23-atalhos-teclado.sh` faz a tradução. Veja a diferença primeiro:
+
+```bash
+scripts/kali-look.sh atalhos status     # o que bate, o que difere, o que falta
+scripts/kali-look.sh atalhos mapa       # a tabela de tradução inteira
+scripts/kali-look.sh atalhos migrar     # grava no xfwm4 (backup do canal antes)
+```
+
+Dois modos, e a diferença importa:
+
+- `--modo mesclar` (padrão) grava o seu atalho e **mantém** o do Kali quando as
+  teclas não colidem. `Super+H` passa a minimizar, e `Alt+F9` continua
+  minimizando. Na colisão, o seu vence, e o script diz qual valor substituiu.
+- `--modo exclusivo` deixa cada ação traduzida **só** com a sua tecla, removendo
+  as outras teclas ligadas à mesma ação.
+
+O que não tem par não migra, e o script lista o que ficou de fora em vez de
+fingir. Os casos fixos: `unmaximize` (no xfwm4 é a mesma tecla que maximiza),
+"última área de trabalho", troca de janela dentro do mesmo aplicativo,
+`switch-input-source` (quem cuida do layout é o `xfce4-settings`, não o WM) e
+tudo que depende da visão geral de atividades.
+
+Para voltar ao conjunto do Kali: `scripts/kali-look.sh atalhos reverter`.
+
+> Os nomes de ação do xfwm4 e os comandos usados na tradução saem de
+> `docs/referencia/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml` e das
+> strings do binário `xfwm4` instalado — nenhum foi inventado.
+
+## 4.8 Atalho: script
 
 Os passos 4.3 a 4.5 estão automatizados em `scripts/20-aplicar-xfce.sh` — rode-o
 **dentro da sessão Xfce**. O painel é um segundo comando, porque carregar o perfil
@@ -228,7 +277,7 @@ scripts/kali-look.sh aplicar xfce      # tema, ícones, fontes, wallpaper, termi
 scripts/kali-look.sh painel xfce       # perfil do painel + Whisker Menu + genmon
 ```
 
-## 4.8 Verificação
+## 4.9 Verificação
 
 Entre na sessão Xfce e confira:
 
