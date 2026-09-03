@@ -239,7 +239,16 @@ cmd_status() {
     printf '    %-22s %s\n' "ícones"    "$(xfconf-query -c xsettings -p /Net/IconThemeName 2>/dev/null || echo '-')"
     printf '    %-22s %s\n' "fonte"     "$(xfconf-query -c xsettings -p /Gtk/FontName 2>/dev/null || echo '-')"
     printf '    %-22s %s\n' "xfwm4"     "$(xfconf-query -c xfwm4 -p /general/theme 2>/dev/null || echo '-')"
+    # A paleta do Kali vale só para o xfce4-terminal: se o preferido é outro, a
+    # aparência do terminal não muda e parece que a paleta não pegou.
+    printf '    %-22s %s\n' "terminal preferido" \
+      "$(awk -F= '/^TerminalEmulator=/{print $2; exit}' "$HOME/.config/xfce4/helpers.rc" 2>/dev/null || echo 'não definido')"
+    printf '    %-22s %s\n' "paleta no terminalrc" \
+      "$(grep -q 'ColorPalette=#1F2229' "$HOME/.config/xfce4/terminal/terminalrc" 2>/dev/null && echo 'Kali' || echo 'padrão')"
   fi
+  printf '  %sTerminal do sistema%s\n' "$C_BOLD" "$C_RESET"
+  printf '    %-22s %s\n' "x-terminal-emulator" \
+    "$(update-alternatives --query x-terminal-emulator 2>/dev/null | awk '/^Value:/{print $2; exit}' || echo '-')"
   if [ -f "$HOME/.config/kdeglobals" ]; then
     printf '  %sKDE Plasma%s\n' "$C_BOLD" "$C_RESET"
     printf '    %-22s %s\n' "esquema de cores" \
@@ -313,8 +322,15 @@ cmd_status() {
     "$([ -f /etc/default/grub.d/kali-themes.cfg ] && echo 'aplicado' || echo 'padrão')"
   printf '  plymouth .....: %s\n' \
     "$(readlink -f /usr/share/plymouth/themes/default.plymouth 2>/dev/null | xargs -r basename || echo '?')"
-  printf '  prompt no zsh : %s\n' \
-    "$(grep -q '>>> prompt kali >>>' "$HOME/.zshrc" 2>/dev/null && echo 'aplicado' || echo 'não aplicado')"
+  local pstat="não aplicado"
+  if grep -q '>>> prompt kali >>>' "$HOME/.zshrc" 2>/dev/null; then
+    pstat="aplicado"
+    local quem=""
+    quem="$(prompt_concorrente "$HOME/.zshrc" || true)"
+    # "aplicado" sozinho engana quando outro prompt redesenha depois.
+    [ -n "$quem" ] && pstat="aplicado, mas SOBRESCRITO por: $quem"
+  fi
+  printf '  prompt no zsh : %s\n' "$pstat"
 
   titulo "Backups"
   if [ -d "$STATE_DIR" ]; then
@@ -681,6 +697,105 @@ cmd_greeter() {
 # ================================================================ TERMINAL ====
 PALETA_KALI="['#1F2229','#D41919','#5EBDAB','#FEA44C','#367BF0','#9755B3','#49AEE6','#E6E6E6','#198388','#EC0101','#47D4B9','#FF8A18','#277FFF','#962AC3','#05A1F7','#FFFFFF']"
 
+# A paleta do Kali configura o xfce4-terminal e mais nenhum terminal. Não basta
+# instalá-la: se o terminal que abre for outro (o Ubuntu pode ter tilix, terminator
+# ou gnome-terminal como padrão), nada muda de aparência e parece que a paleta
+# falhou. Estas três funções fecham esse buraco.
+
+# `exo-open --launch TerminalEmulator` — usado pelos atalhos do Kali (Super+T,
+# Ctrl+Alt+T) e pelo launcher do painel — resolve pelo helpers.rc.
+terminal_preferido_xfce() {
+  local rc="$HOME/.config/xfce4/helpers.rc"
+  local atual=""
+  if [ -f "$rc" ]; then
+    atual="$(awk -F= '/^TerminalEmulator=/{print $2; exit}' "$rc" 2>/dev/null || true)"
+  fi
+  if [ "$atual" = "xfce4-terminal" ]; then
+    ok "terminal preferido do Xfce já é o xfce4-terminal"
+    return 0
+  fi
+  [ -n "$atual" ] && info "  terminal preferido atual: $atual"
+  run mkdir -p "$HOME/.config/xfce4"
+  if [ -f "$rc" ]; then
+    run cp "$rc" "$rc.bak-$(date +%Y%m%d-%H%M%S)"
+  fi
+  if [ "$DRY_RUN" -eq 1 ]; then
+    printf '%s[dry-run]%s escreveria TerminalEmulator=xfce4-terminal em %s\n' \
+      "$C_DIM" "$C_RESET" "$rc"
+  else
+    # Preserva as outras escolhas do usuário; troca só a linha do terminal.
+    if [ -f "$rc" ]; then
+      grep -v '^TerminalEmulator=' "$rc" > "$rc.tmp" 2>/dev/null || true
+      printf 'TerminalEmulator=xfce4-terminal\n' >> "$rc.tmp"
+      mv "$rc.tmp" "$rc"
+    else
+      printf 'TerminalEmulator=xfce4-terminal\n' > "$rc"
+    fi
+  fi
+  ok "terminal preferido do Xfce = xfce4-terminal (atalho Super+T)"
+}
+
+# O "Root Terminal Emulator" do painel do Kali roda `pkexec x-terminal-emulator`,
+# que é uma alternativa do dpkg — global, e por isso pede sudo.
+checa_x_terminal_emulator() {
+  local atual=""
+  atual="$(update-alternatives --query x-terminal-emulator 2>/dev/null \
+           | awk '/^Value:/{print $2; exit}' || true)"
+  case "$atual" in
+    *xfce4-terminal*) ok "x-terminal-emulator já aponta para o xfce4-terminal"; return 0 ;;
+    "") aviso "não há alternativa x-terminal-emulator configurada neste sistema"; return 0 ;;
+  esac
+  aviso "x-terminal-emulator aponta para: $atual"
+  aviso "É o que o \"Root Terminal\" do painel abre — sairia sem a paleta do Kali."
+  if confirmar "apontar x-terminal-emulator para o xfce4-terminal? (afeta todo o sistema)"; then
+    run_sudo update-alternatives --set x-terminal-emulator /usr/bin/xfce4-terminal.wrapper
+    ok "x-terminal-emulator = xfce4-terminal"
+  else
+    info "Mantido. Para trocar depois:"
+    info "  sudo update-alternatives --set x-terminal-emulator /usr/bin/xfce4-terminal.wrapper"
+    info "  (ou 'sudo update-alternatives --config x-terminal-emulator' para escolher)"
+  fi
+}
+
+# Sobe a árvore de processos até achar um emulador de terminal conhecido. É assim
+# que descobrimos em qual terminal o usuário está de fato — a causa nº 1 de
+# "apliquei a paleta e o terminal não mudou" é ela ter ido para outro programa.
+terminal_em_uso() {
+  local p="$PPID" nome="" i=0
+  while [ "$i" -lt 8 ] && [ -n "$p" ] && [ "$p" != "1" ]; do
+    nome="$(ps -o comm= -p "$p" 2>/dev/null | tr -d ' ' || true)"
+    case "$nome" in
+      xfce4-terminal|tilix|terminator|konsole|kitty|alacritty|xterm|qterminal)
+        printf '%s' "$nome"; return 0 ;;
+      gnome-terminal*) printf 'gnome-terminal'; return 0 ;;
+    esac
+    p="$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ' || true)"
+    i=$((i + 1))
+  done
+  return 1
+}
+
+terminal_em_uso_avisa() {
+  local atual=""
+  atual="$(terminal_em_uso || true)"
+  [ -n "$atual" ] || return 0
+  if [ "$atual" = "xfce4-terminal" ]; then
+    ok "você já está no xfce4-terminal"
+    return 0
+  fi
+  echo
+  aviso "O terminal em que você está agora é o $atual, não o xfce4-terminal."
+  aviso "O que acabou de ser configurado vale SÓ para o xfce4-terminal."
+  info  "Abra o xfce4-terminal (Super+T, ou o ícone do painel) para ver o resultado —"
+  info  "ou aplique a paleta no $atual, se preferir continuar nele:"
+  case "$atual" in
+    tilix)          info "  $0 terminal tilix" ;;
+    gnome-terminal) info "  $0 terminal gnome" ;;
+    konsole)        info "  $0 terminal plasma" ;;
+    *)              info "  a paleta para $atual está em docs/guias/07-terminal-e-prompt.md §7.5" ;;
+  esac
+}
+
 cmd_terminal() {
   case "${1:-}" in
     gnome)
@@ -703,12 +818,32 @@ cmd_terminal() {
       ok "gnome-terminal configurado"
       ;;
     xfce)
-      titulo "Paleta do Kali no xfce4-terminal"
+      titulo "Terminal do Kali no Xfce"
+      if ! tem xfce4-terminal; then
+        erro "o xfce4-terminal não está instalado — é ELE que o Kali usa."
+        info "A paleta deste runbook configura o xfce4-terminal e mais nenhum."
+        info "Instale com: sudo apt install xfce4-terminal"
+        return 1
+      fi
+
+      info "1/3 paleta, transparência e fonte"
       run mkdir -p "$HOME/.config/xfce4/terminal"
-      [ -f "$HOME/.config/xfce4/terminal/terminalrc" ] \
-        && move_bak "$HOME/.config/xfce4/terminal/terminalrc"
+      if [ -f "$HOME/.config/xfce4/terminal/terminalrc" ]; then
+        move_bak "$HOME/.config/xfce4/terminal/terminalrc"
+      fi
       run cp "$REF_DIR/shell/xfce4-terminalrc" "$HOME/.config/xfce4/terminal/terminalrc"
       ok "terminalrc instalado"
+
+      info "2/3 terminal preferido do Xfce"
+      terminal_preferido_xfce
+
+      info "3/3 terminal padrão do sistema"
+      checa_x_terminal_emulator
+
+      echo
+      aviso "Janela de terminal já aberta NÃO muda: o xfce4-terminal lê o"
+      aviso "terminalrc na inicialização. Abra uma nova (Super+T) para ver."
+      terminal_em_uso_avisa
       ;;
     plasma)
       titulo "Paleta do Kali no Konsole"
@@ -722,13 +857,99 @@ cmd_terminal() {
         || aviso "kwriteconfig não encontrado; defina o perfil pela interface do Konsole"
       ok "Konsole configurado"
       ;;
-    *) morre "uso: $0 terminal gnome | xfce | plasma" ;;
+    tilix)
+      precisa dconf "Instale com: sudo apt install dconf-cli"
+      tem tilix || morre "o tilix não está instalado"
+      titulo "Paleta do Kali no tilix"
+      local U B
+      # `|| true`: com pipefail, o grep sem correspondência abortaria a atribuição.
+      U="$(dconf list /com/gexperts/Tilix/profiles/ 2>/dev/null | grep '/$' | head -1 | tr -d '/' || true)"
+      [ -n "$U" ] || morre "nenhum perfil do tilix encontrado — abra o tilix uma vez e repita"
+      B="/com/gexperts/Tilix/profiles/$U"
+      info "perfil: $U"
+      # Origem: /usr/share/tilix/schemes/Kali.json, do pacote kali-themes-common.
+      # Mesmas 16 cores da PALETA_KALI usada no gnome-terminal.
+      local PAL_TILIX="['#1F2229', '#D41919', '#5EBDAB', '#FEA44C', '#367bf0', '#9755b3', '#49AEE6', '#E6E6E6', '#198388', '#EC0101', '#47D4B9', '#FF8A18', '#277FFF', '#962ac3', '#05A1F7', '#FFFFFF']"
+      run dconf write "$B/palette" "$PAL_TILIX"
+      run dconf write "$B/use-theme-colors" true
+      # Fonte: xsettings.xml do Kali define MonospaceFontName = Fira Code Medium 10.
+      # O tilix, sendo app GTK, leria a fonte mono do GNOME (outra) com system-font.
+      run dconf write "$B/use-system-font" false
+      run dconf write "$B/font" "'Fira Code Medium 10'"
+      # terminalrc do Kali: BackgroundDarkness=0.95 -> 5% de transparência.
+      run dconf write "$B/use-transparent-background" true
+      run dconf write "$B/background-transparency-percent" 5
+      ok "tilix configurado (abra uma aba nova para ver)"
+      info "Desfazer: dconf reset -f $B/"
+      ;;
+    auto|"")
+      local atual=""
+      atual="$(terminal_em_uso || true)"
+      if [ -z "$atual" ]; then
+        erro "não identifiquei o terminal em uso."
+        info "uso: $0 terminal xfce | tilix | gnome | plasma"
+        return 1
+      fi
+      info "terminal em uso: $atual"
+      case "$atual" in
+        xfce4-terminal) cmd_terminal xfce ;;
+        tilix)          cmd_terminal tilix ;;
+        gnome-terminal) cmd_terminal gnome ;;
+        konsole)        cmd_terminal plasma ;;
+        *)
+          erro "não há receita automática para $atual neste runbook."
+          info "A paleta das 16 cores está em docs/guias/07-terminal-e-prompt.md §7.1;"
+          info "o §7.5 lista onde o Kali põe o esquema de cada terminal."
+          return 1 ;;
+      esac
+      ;;
+    *) morre "uso: $0 terminal xfce | tilix | gnome | plasma | auto" ;;
   esac
 }
 
 # ================================================================== PROMPT ====
 PROMPT_INICIO='# >>> prompt kali >>>'
 PROMPT_FIM='# <<< prompt kali <<<'
+
+# Um framework de prompt (oh-my-zsh com tema, Powerlevel10k, Starship) redefine o
+# PROMPT em cada `precmd`. O bloco do Kali fica no arquivo, a variável até é lida
+# certa por `zsh -i -c`, e ainda assim a tela mostra o outro prompt — porque quem
+# desenha por último ganha. Detectar isso é a diferença entre "não funcionou" e
+# "há dois prompts disputando; escolha um".
+prompt_concorrente() {
+  local rc="$1" achados=""
+  [ -f "$rc" ] || return 1
+  local tema=""
+  tema="$(awk -F'"' '/^[[:space:]]*ZSH_THEME=/{print $2; exit}' "$rc" 2>/dev/null || true)"
+  if [ -n "$tema" ] && [ "$tema" != "" ]; then
+    achados="oh-my-zsh com ZSH_THEME=\"$tema\""
+  fi
+  if grep -qE '^[[:space:]]*(eval "\$\(starship init zsh\)"|source.*starship)' "$rc" 2>/dev/null; then
+    achados="${achados:+$achados; }Starship"
+  fi
+  if grep -qE '^[[:space:]]*source.*powerlevel10k|^[[:space:]]*ZSH_THEME=.*powerlevel10k' "$rc" 2>/dev/null; then
+    achados="${achados:+$achados; }Powerlevel10k"
+  fi
+  [ -n "$achados" ] || return 1
+  printf '%s' "$achados"
+}
+
+prompt_avisa_concorrente() {
+  local rc="$1" quem=""
+  quem="$(prompt_concorrente "$rc" || true)"
+  [ -n "$quem" ] || return 0
+  echo
+  aviso "Há outro prompt ativo neste $rc: $quem."
+  aviso "Ele redesenha o PROMPT a cada comando, DEPOIS do bloco do Kali — então o"
+  aviso "bloco fica no arquivo e não aparece na tela. Não é falha da aplicação:"
+  aviso "são dois prompts disputando, e quem desenha por último ganha."
+  echo
+  info "Para ficar com o prompt do Kali, desative o concorrente:"
+  info "  • oh-my-zsh: troque a linha por  ZSH_THEME=\"\"  (tema vazio)"
+  info "  • Starship:  comente a linha  eval \"\$(starship init zsh)\""
+  info "  • Powerlevel10k: comente o source do tema e o do ~/.p10k.zsh"
+  info "Depois abra um terminal novo. Para voltar ao seu, é só reverter a linha."
+}
 
 cmd_prompt() {
   local RC="$HOME/.zshrc"
@@ -737,10 +958,11 @@ cmd_prompt() {
       titulo "Prompt de duas linhas do Kali no zsh"
       [ -f "$RC" ] || morre "$RC não existe"
       if grep -q "$PROMPT_INICIO" "$RC" 2>/dev/null; then
-        info "o bloco já está no $RC — nada a fazer"; return 0
+        ok "o bloco do Kali já está no $RC"
+        if prompt_avisa_concorrente "$RC"; then :; fi
+        return 0
       fi
-      aviso "se você usa Powerlevel10k/Starship, eles sobrescrevem o PROMPT;"
-      aviso "escolha um dos dois."
+      prompt_avisa_concorrente "$RC"
       confirmar "acrescentar o bloco ao fim do $RC (com backup)?" || return 1
       run cp "$RC" "$RC.bak-$(date +%Y%m%d-%H%M%S)"
       if [ "$DRY_RUN" -eq 1 ]; then
@@ -819,7 +1041,7 @@ menu() {
     p) Painel do Kali no Xfce (perfil + Whisker Menu + genmon)
 
   Peças isoladas
-   10) Terminal: paleta do Kali (gnome / xfce / plasma)
+   10) Terminal: paleta do Kali (auto / xfce / tilix / gnome / plasma)
    11) Prompt de duas linhas no zsh: aplicar
    12) Prompt de duas linhas no zsh: remover
    13) Boot e login (GRUB, Plymouth, logo do GDM) — risco alto
@@ -851,7 +1073,8 @@ MENU
       7)  cmd_aplicar xfce ;;
       8)  cmd_aplicar plasma ;;
       9)  cmd_aplicar gnome ;;
-      10) read -r -p "  qual terminal (gnome/xfce/plasma)? " t; cmd_terminal "${t:-}" ;;
+      10) read -r -p "  qual terminal (Enter=auto / xfce / tilix / gnome / plasma)? " t
+          cmd_terminal "${t:-auto}" ;;
       11) cmd_prompt aplicar ;;
       12) cmd_prompt remover ;;
       13) cmd_boot aplicar ;;
@@ -906,7 +1129,8 @@ COMANDOS
   remover xfce|plasma                 desinstala o ambiente (simula antes, pede confirmação)
   remover assets --usuario|--sistema  remove temas, ícones e wallpapers do Kali
 
-  terminal gnome|xfce|plasma          só a paleta/fonte/transparência do terminal
+  terminal xfce|tilix|gnome|plasma    paleta/fonte/transparência do terminal
+  terminal auto                       detecta o terminal em uso e aplica nele
   prompt aplicar|remover              bloco do prompt de duas linhas no ~/.zshrc
   boot aplicar|reverter               GRUB + Plymouth + logo do GDM (risco alto)
   greeter aplicar|reverter|status     tela de login do LightDM (risco alto)
@@ -922,6 +1146,7 @@ EXEMPLOS
   $0 aplicar gnome
   $0 reverter gnome
   $0 --dry-run remover xfce
+  $0 terminal auto                    # aplica no terminal em que você está
   $0 --sim terminal gnome             # sem perguntas
 
 Log de tudo o que foi feito: $LOG

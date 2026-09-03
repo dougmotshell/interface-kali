@@ -28,6 +28,41 @@ cp docs/referencia/shell/xfce4-terminalrc \
    ~/.config/xfce4/terminal/terminalrc
 ```
 
+Isso configura o **xfce4-terminal e mais nenhum**. Duas coisas fazem esse arquivo
+não aparecer em lugar nenhum, e as duas são mais comuns que erro de paleta:
+
+**1. O terminal que abre é outro.** Os atalhos do Kali (`Super+T`, `Ctrl+Alt+T`) e
+o launcher do painel rodam `exo-open --launch TerminalEmulator`, que resolve pelo
+`~/.config/xfce4/helpers.rc`. Se ele não existe ou aponta para outro programa,
+abre outro terminal — e nada muda:
+
+```bash
+mkdir -p ~/.config/xfce4
+printf 'TerminalEmulator=xfce4-terminal\n' >> ~/.config/xfce4/helpers.rc
+```
+
+O "Root Terminal Emulator" do painel do Kali roda `pkexec x-terminal-emulator`,
+que é uma **alternativa do dpkg** — global, e por isso com `sudo`:
+
+```bash
+update-alternatives --query x-terminal-emulator | grep '^Value:'   # quem é hoje
+sudo update-alternatives --set x-terminal-emulator /usr/bin/xfce4-terminal.wrapper
+```
+
+Num Ubuntu que já teve outros terminais instalados, esse valor costuma ser
+`tilix`, `terminator` ou `gnome-terminal`.
+
+**2. A janela já estava aberta.** O xfce4-terminal lê o `terminalrc` na
+inicialização. Abra uma janela nova.
+
+O `kali-look.sh` cuida dos dois e diz em qual terminal você está:
+
+```bash
+scripts/kali-look.sh terminal xfce    # paleta + terminal preferido + alternativa
+scripts/kali-look.sh terminal auto    # detecta o terminal em uso e aplica nele
+scripts/kali-look.sh status           # mostra o preferido e o x-terminal-emulator
+```
+
 ## 7.3 gnome-terminal (ambiente GNOME)
 
 O `gnome-terminal` guarda cores por perfil, identificado por UUID:
@@ -59,10 +94,38 @@ kwriteconfig5 --file konsolerc --group "Desktop Entry" --key DefaultProfile Kali
 
 ## 7.5 Outros terminais
 
-O `kali-themes` também traz a mesma paleta para `tilix`
-(`/usr/share/tilix/schemes/`), `alacritty` (`/etc/xdg/alacritty/alacritty.toml`),
-`terminator`, `qterminal` e `yakuake`. Você já tem o Tilix instalado — se usar o
-modo B de instalação dos assets, o esquema aparece na lista de esquemas dele.
+O `kali-themes-common` também traz a mesma paleta para `tilix`
+(`/usr/share/tilix/schemes/Kali.json`), `alacritty`
+(`/etc/xdg/alacritty/alacritty.toml`), `terminator`, `qterminal` e `yakuake`. Com
+o **modo B** (assets no sistema), esses arquivos aparecem sozinhos.
+
+### tilix
+
+O `Kali.json` é só o esquema — ele fica disponível na lista, mas não se aplica
+sozinho. O tilix guarda o perfil no `dconf`:
+
+```bash
+U=$(dconf list /com/gexperts/Tilix/profiles/ | grep '/$' | head -1 | tr -d '/')
+B=/com/gexperts/Tilix/profiles/$U
+
+# as 16 cores de /usr/share/tilix/schemes/Kali.json
+dconf write $B/palette "['#1F2229', '#D41919', '#5EBDAB', '#FEA44C', '#367bf0', '#9755b3', '#49AEE6', '#E6E6E6', '#198388', '#EC0101', '#47D4B9', '#FF8A18', '#277FFF', '#962ac3', '#05A1F7', '#FFFFFF']"
+dconf write $B/use-theme-colors true        # também vem do Kali.json
+
+# fonte: xsettings.xml do Kali define MonospaceFontName = Fira Code Medium 10.
+# Sem isto o tilix usa a fonte mono do GNOME, que é outra.
+dconf write $B/use-system-font false
+dconf write $B/font "'Fira Code Medium 10'"
+
+# terminalrc do Kali: BackgroundDarkness=0.95 -> 5% de transparência
+dconf write $B/use-transparent-background true
+dconf write $B/background-transparency-percent 5
+```
+
+Ou `scripts/kali-look.sh terminal tilix`. Desfazer: `dconf reset -f $B/`.
+
+Para os demais (`alacritty`, `terminator`, `qterminal`, `yakuake`) o runbook não
+tem receita automática: use a paleta de §7.1 na configuração de cada um.
 
 ## 7.6 O prompt de duas linhas
 

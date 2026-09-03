@@ -331,6 +331,38 @@ grep -nE 'p10k|powerlevel|starship|oh-my-zsh|PROMPT=' ~/.zshrc
 
 Depois: `exec zsh` para recarregar.
 
+### Apliquei a paleta e o terminal continua igual
+
+**Sintoma.** O tema das janelas mudou, o painel mudou, mas o terminal segue com as
+cores de antes.
+
+**Causa.** Quase sempre não é a paleta — é **outro terminal**. O
+`~/.config/xfce4/terminal/terminalrc` configura o `xfce4-terminal` e mais nenhum.
+Se o que abre é `tilix`, `terminator` ou `gnome-terminal`, nada muda.
+
+Duas coisas decidem qual abre:
+
+| O que abre | Resolvido por | Como ver |
+|---|---|---|
+| `Super+T`, `Ctrl+Alt+T`, launcher do painel (`exo-open --launch TerminalEmulator`) | `~/.config/xfce4/helpers.rc` | `awk -F= '/^TerminalEmulator=/{print $2}' ~/.config/xfce4/helpers.rc` |
+| "Root Terminal" do painel (`pkexec x-terminal-emulator`) | alternativa do dpkg (global) | `update-alternatives --query x-terminal-emulator \| grep '^Value:'` |
+
+**Solução.** Deixe o script resolver — ele identifica o terminal em que você está
+e diz o que fazer:
+
+```bash
+scripts/kali-look.sh terminal auto    # aplica no terminal em uso
+scripts/kali-look.sh terminal xfce    # paleta + terminal preferido + alternativa
+scripts/kali-look.sh status           # mostra os dois valores acima
+```
+
+Se você prefere continuar no tilix, a paleta do Kali existe para ele:
+`scripts/kali-look.sh terminal tilix` (ver
+[`07-terminal-e-prompt.md`](07-terminal-e-prompt.md) §7.5).
+
+**Terceira causa, mais boba:** a janela já estava aberta. O xfce4-terminal lê o
+`terminalrc` na inicialização — abra uma nova.
+
 ### As cores do terminal não mudaram
 
 O `gnome-terminal` guarda cores **por perfil**. Se você tem vários, o comando do

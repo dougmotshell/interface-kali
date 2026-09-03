@@ -49,6 +49,40 @@ echo "== terminal =="
 mkdir -p "$HOME/.config/xfce4/terminal"
 cp "$REF/shell/xfce4-terminalrc" "$HOME/.config/xfce4/terminal/terminalrc"
 
+# A paleta configura o xfce4-terminal e mais nenhum terminal. Sem apontar o
+# terminal preferido para ele, os atalhos do Kali (Super+T, Ctrl+Alt+T, que rodam
+# `exo-open --launch TerminalEmulator`) e o launcher do painel abrem o terminal
+# padrão do sistema — no Ubuntu isso pode ser tilix, terminator ou gnome-terminal,
+# e aí nada muda de aparência.
+HELPERS="$HOME/.config/xfce4/helpers.rc"
+ATUAL=""
+[ -f "$HELPERS" ] && ATUAL="$(awk -F= '/^TerminalEmulator=/{print $2; exit}' "$HELPERS" 2>/dev/null || true)"
+if [ "$ATUAL" = "xfce4-terminal" ]; then
+  echo "  terminal preferido já é o xfce4-terminal"
+elif command -v xfce4-terminal >/dev/null; then
+  if [ -f "$HELPERS" ]; then
+    cp "$HELPERS" "$HELPERS.bak-$(date +%Y%m%d-%H%M%S)"
+    grep -v '^TerminalEmulator=' "$HELPERS" > "$HELPERS.tmp" 2>/dev/null || true
+    printf 'TerminalEmulator=xfce4-terminal\n' >> "$HELPERS.tmp"
+    mv "$HELPERS.tmp" "$HELPERS"
+  else
+    printf 'TerminalEmulator=xfce4-terminal\n' > "$HELPERS"
+  fi
+  echo "  terminal preferido = xfce4-terminal (era: ${ATUAL:-nao definido})"
+else
+  echo "  xfce4-terminal não instalado — a paleta não terá onde aparecer"
+fi
+
+# O "Root Terminal" do painel do Kali roda `pkexec x-terminal-emulator`, que é
+# alternativa global do dpkg: só avisamos, porque trocá-la exige sudo.
+XTE="$(update-alternatives --query x-terminal-emulator 2>/dev/null | awk '/^Value:/{print $2; exit}' || true)"
+case "$XTE" in
+  *xfce4-terminal*|"") ;;
+  *) echo "  atenção: x-terminal-emulator aponta para $XTE"
+     echo "           o \"Root Terminal\" do painel sairia sem a paleta do Kali."
+     echo "           trocar:  sudo update-alternatives --set x-terminal-emulator /usr/bin/xfce4-terminal.wrapper" ;;
+esac
+
 echo
 echo "Falta o painel — e ele é etapa separada de propósito:"
 echo "  bash \"$SCRIPT_DIR/22-painel-xfce.sh\"            # painel de 34 px"
